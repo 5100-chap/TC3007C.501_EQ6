@@ -8,6 +8,8 @@ La carpeta princial  de este repositorio contiene los siguientes archivos y carp
    - README.md: Este archivo actual que contiene introduccion, informacion del dataset y Estrucutra del Repositorio.
    - Memorandum of Understanding: Este documento servira para establecer un entendimiento o acuerdo preliminar entre dos o más partes relacionado al proyecto junto al socioformador
    - One Page Document: Este documento contiene los requirimientos para la realizacion del proyecto junto a los elementos que necesitamos y ocuparemos para llevar a cabo.
+   - Mapeo de los recursos y herramientas disponibles> Mapa con los recursos disponible y a solicitar necesarios para ejecutar ciertas partes del proyecto o entregables.
+   - Metodología: Plan Inicial Basado en la metodologia que emplearemos para trabajar y avanzar con el proyecto a lo largo de las semanas.
 - Folders
    - Avances Semanales: Folder con un documento pdf que contendra los avances que hagamos cada semana desde el inicio del proyecto hasta su cierre.
    
