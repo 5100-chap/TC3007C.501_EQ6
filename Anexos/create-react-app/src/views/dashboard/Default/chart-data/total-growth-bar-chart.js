@@ -73,14 +73,6 @@ const chartData = {
     {
       name: 'Participaciones',
       data: [20, 35, 15, 33, 10]
-    },
-    {
-      name: 'Profit',
-      data: [35, 145, 35, 35, 20]
-    },
-    {
-      name: 'Maintenance',
-      data: [0, 0, 75, 0, 0]
     }
   ]
 };
