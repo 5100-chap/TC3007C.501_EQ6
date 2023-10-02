@@ -37,7 +37,7 @@ Diagrama de Flujo de las etapas del proyecto.
 * **Descripción**: Configuración de Firebase, desarrollo de módulos en Python y lógica de asistencia.
 * **Objetivo**: Desarrollar un backend robusto y eficiente que soporte las funcionalidades clave del sistema.
     * **Subobjetivos**:
-        * Configurar la base de datos en Firebase.
+        * Configurar la base de datos en Azure SQL.
         * Desarrollar módulos en Python para el reconocimiento de rostros y seguimiento de objetos.
         * Implementar la lógica de registro automático de asistencia.
 
