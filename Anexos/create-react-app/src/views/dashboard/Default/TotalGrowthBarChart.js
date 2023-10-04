@@ -21,15 +21,15 @@ import chartData from './chart-data/total-growth-bar-chart';
 const status = [
   {
     value: 'today',
-    label: 'Semana'
+    label: 'Grupo 1'
   },
   {
     value: 'month',
-    label: 'Mes'
+    label: 'Grupo 2'
   },
   {
     value: 'year',
-    label: 'Año'
+    label: 'Grupo 3'
   }
 ];
 

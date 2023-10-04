@@ -16,6 +16,7 @@ import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
+//import { CheckBox } from '@mui/icons-material';
 
 // ==============================|| DASHBOARD DEFAULT - POPULAR CARD ||============================== //
 
@@ -43,7 +44,11 @@ const PopularCard = ({ isLoading }) => {
               <Grid item xs={12}>
                 <Grid container alignContent="center" justifyContent="space-between">
                   <Grid item>
-                    <Typography variant="h4">Asistencias</Typography>
+                  <Typography variant="h4">Asistencia</Typography>
+                    {/* <CheckBox></CheckBox> */}
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="h4">Nombre</Typography>
                   </Grid>
                   <Grid item>
                     <MoreHorizOutlinedIcon
