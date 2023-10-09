@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-
+import AddIcon from '@mui/icons-material/Add';
 // material-ui
 import { Grid } from '@mui/material';
 
@@ -12,12 +12,15 @@ import TotalOrderLineChartCard from './TotalOrderLineChartCard';
 import TotalGrowthBarChart from './TotalGrowthBarChart';
 import { gridSpacing } from 'store/constant';
 import { DataGrid } from '@mui/x-data-grid';
+import Button from '@mui/material/Button';
 
+import { MenuItem, TextField } from '@mui/material';
 // ==============================|| DEFAULT DASHBOARD ||============================== //
 
 
 
 const Dashboard = () => {
+  const [value, setValue] = useState('grupo1');
   const [isLoading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(false);
@@ -42,8 +45,40 @@ const rows = [
     { id: 9, lastName: 'Roxie', firstName: 'Harvey', participacion: 65 },
 ];
 
+const status = [
+  {
+    value: 'grupo1',
+    label: 'Grupo 1'
+  },
+  {
+    value: 'grupo2',
+    label: 'Grupo 2'
+  },
+  {
+    value: 'grupo3',
+    label: 'Grupo 3'
+  }
+];
   return (
     <Grid container spacing={gridSpacing}>
+      <Grid item xs={12}>
+        <Grid container spacing={gridSpacing}> 
+          <Grid item lg={6} md={6} sm={6} xs={12}>
+                  <TextField fullWidth={true} id="standard-select-currency" select value={value} onChange={(e) => setValue(e.target.value)} >
+                    {status.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+          </Grid>
+          <Grid item lg={6} md={6} sm={6} xs={12}>
+          <Button fullWidth={true} size="large" variant="contained" endIcon={<AddIcon />}>
+            Nuevo Curso</Button>
+          </Grid>
+
+        </Grid>
+      </Grid>
       <Grid item xs={12}>
         <Grid container spacing={gridSpacing}>
           <Grid item lg={6} md={6} sm={6} xs={12}>
