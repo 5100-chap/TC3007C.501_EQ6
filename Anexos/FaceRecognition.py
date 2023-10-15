@@ -3,7 +3,7 @@ import os
 import face_recognition
 
 # Codificar los rostros extraidos
-imageFacesPath = "c:/Users/usuario/Downloads/faceRecognition"
+imageFacesPath = "Anexos/IdentificadorCarPos/Imagenes/"
 
 facesEncodings = []
 facesNames = []
