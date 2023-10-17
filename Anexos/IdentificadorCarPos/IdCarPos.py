@@ -3,7 +3,7 @@ from faceClass import FaceClass
 from postureClass import PostureClass
 
 def main():
-    face_class = FaceClass("Anexos/IdentificadorCarPos/Imagenes/Estudiante.png")
+    face_class = FaceClass("Anexos/IdentificadorCarPos/Imagenes/")
     posture_class = PostureClass()
     
     cap = cv2.VideoCapture(0)
@@ -25,11 +25,6 @@ def main():
         cv2.imshow('Frame', arm_frame)
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
-        
-        cv2.imshow('Frame', arm_frame)
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-    
     cap.release()
     cv2.destroyAllWindows()
 
