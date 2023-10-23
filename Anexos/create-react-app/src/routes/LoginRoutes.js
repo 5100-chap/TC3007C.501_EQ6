@@ -17,7 +17,6 @@ const LoginRoutes = {
     element: (
         <NavMotion>
                 <MinimalLayout />
-            
         </NavMotion>
     ),
     children: [
