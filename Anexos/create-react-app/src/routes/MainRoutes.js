@@ -6,6 +6,8 @@ import Loadable from 'ui-component/Loadable';
 
 // dashboard routing
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')));
+const CameraDefault = Loadable(lazy(() => import('views/camera')));
+const InicioDefault = Loadable(lazy(() => import('views/inicio')));
 // utilities routing
 const UtilsTypography = Loadable(lazy(() => import('views/utilities/Typography')));
 const UtilsColor = Loadable(lazy(() => import('views/utilities/Color')));
@@ -34,6 +36,16 @@ const MainRoutes = {
           element: <DashboardDefault />
         }
       ]
+    },
+    {
+      path: 'camera',
+      element: <CameraDefault />
+      
+    },
+    {
+      path: 'inicio',
+      element: <InicioDefault />
+      
     },
     {
       path: 'utils',
