@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 // material-ui
-import { Grid } from '@mui/material';
-
 // project imports
 import EarningCard from './EarningCard';
 //import PopularCard from './PopularCard';
@@ -12,9 +10,19 @@ import TotalOrderLineChartCard from './TotalOrderLineChartCard';
 import TotalGrowthBarChart from './TotalGrowthBarChart';
 import { gridSpacing } from 'store/constant';
 import { DataGrid } from '@mui/x-data-grid';
-import Button from '@mui/material/Button';
+import {
+  Grid,
+  TextField,
+  MenuItem,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from '@mui/material';
 
-import { MenuItem, TextField } from '@mui/material';
+import Lista from './list';
 // ==============================|| DEFAULT DASHBOARD ||============================== //
 
 
@@ -25,6 +33,18 @@ const Dashboard = () => {
   useEffect(() => {
     setLoading(false);
   }, []);
+
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleDialogOpen = () => {
+    setOpenDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+  };
+  
+
   
 const columns = [
   {field: 'id', headerName: 'Matricula', width: 130 }, 
@@ -59,6 +79,7 @@ const status = [
     label: 'Grupo 3'
   }
 ];
+
   return (
     <Grid container spacing={gridSpacing}>
       <Grid item xs={12}>
@@ -73,8 +94,38 @@ const status = [
                   </TextField>
           </Grid>
           <Grid item lg={6} md={6} sm={6} xs={12}>
-          <Button fullWidth={true} size="large" variant="contained" endIcon={<AddIcon />}>
-            Nuevo Curso</Button>
+            {/* <Button fullWidth={true} size="large" variant="contained" endIcon={<AddIcon />} >
+            Nuevo Curso
+            </Button> */}
+            <Button fullWidth={true} size="large" variant="contained" endIcon={<AddIcon />} onClick={handleDialogOpen}>
+              Nuevo Curso
+            </Button>
+            {/* ... */}
+
+            {/* Cuadro de Diálogo */}
+            <Dialog open={openDialog} onClose={handleDialogClose} >
+              <DialogTitle>Nuevo curso</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  <div>
+                  <TextField id="grupo" label="Numero de grupo"></TextField>
+                  </div>
+                  <div>
+                  <text>Añadir alumnos</text>
+                  <Lista></Lista>
+                  </div>
+                </DialogContentText>
+                {/* Agrega los campos del nuevo curso aquí */}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleDialogClose} color="primary" variant="contained">
+                  Cancelar
+                </Button>
+                <Button onClick={handleDialogClose} color="primary" variant="contained">
+                  Guardar
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Grid>
 
         </Grid>
