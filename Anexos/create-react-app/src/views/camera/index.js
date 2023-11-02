@@ -15,7 +15,7 @@ const Camera = () => (
       <Webcam></Webcam>
     </Grid>
     <Grid item lg={6} md={6} sm={6} xs={6}>
-            <Button   variant="contained" endIcon={<VideoCallIcon />} color='inherit'>
+            <Button   variant="contained" endIcon={<VideoCallIcon />} color='secondary'>
             Iniciar Grabación
             </Button>
           </Grid>

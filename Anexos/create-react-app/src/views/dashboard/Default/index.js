@@ -22,6 +22,9 @@ import {
   DialogTitle
 } from '@mui/material';
 
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 import Lista from './list';
 // ==============================|| DEFAULT DASHBOARD ||============================== //
 
@@ -36,6 +39,10 @@ const Dashboard = () => {
 
   const [openDialog, setOpenDialog] = useState(false);
 
+  const [openEdit, setopenEdit] = useState(false);
+
+  const [openDelete, setopenDelete] = useState(false);
+
   const handleDialogOpen = () => {
     setOpenDialog(true);
   };
@@ -45,6 +52,21 @@ const Dashboard = () => {
   };
   
 
+  const handleEditOpen = () => {
+    setopenEdit(true);
+  };
+
+  const handleEditClose = () => {
+    setopenEdit(false);
+  };
+
+  const handleDeleteOpen = () => {
+    setopenDelete(true);
+  };
+
+  const handleDeleteClose = () => {
+    setopenDelete(false);
+  };
   
 const columns = [
   {field: 'id', headerName: 'Matricula', width: 130 }, 
@@ -84,7 +106,7 @@ const status = [
     <Grid container spacing={gridSpacing}>
       <Grid item xs={12}>
         <Grid container spacing={gridSpacing}> 
-          <Grid item lg={6} md={6} sm={6} xs={12}>
+          <Grid item md={3} xs={12}>
                   <TextField fullWidth={true} id="standard-select-currency" select value={value} onChange={(e) => setValue(e.target.value)} >
                     {status.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -92,6 +114,52 @@ const status = [
                       </MenuItem>
                     ))}
                   </TextField>
+          </Grid>
+          <Grid item md={1.5} xs={12}>
+                  <Button fullWidth={true} size="large" variant="contained" endIcon={<EditIcon />} color='secondary' onClick={handleEditOpen}>Editar</Button>
+                  <Dialog open={openEdit} onClose={handleEditClose} >
+                  <DialogTitle>Editar curso</DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>
+                      <div>
+                      <text>Grupo 1</text>
+                      </div>
+                      <div>
+                      <text>Alumnos</text>
+                      <Lista></Lista>
+                      </div>
+                    </DialogContentText>
+                    {/* Agrega los campos del nuevo curso aquí */}
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={handleEditClose} color="error" variant="contained">
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleEditClose} color="success" variant="contained">
+                      Guardar
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+          </Grid>
+          <Grid item md={1.5} xs={12}>
+                  <Button fullWidth={true} size="large" variant="contained" endIcon={<DeleteIcon />} color='error' onClick={handleDeleteOpen}>Eliminar</Button>
+                  <Dialog open={openDelete} onClose={handleDeleteClose} >
+                  <DialogTitle>Eliminar</DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>
+                      <text>Borrar permanentemente Grupo 1</text>
+                    </DialogContentText>
+                    {/* Agrega los campos del nuevo curso aquí */}
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={handleDeleteClose} color="error" variant="contained">
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleDeleteClose} color="success" variant="contained">
+                      Aceptar
+                    </Button>
+                  </DialogActions>
+                </Dialog>
           </Grid>
           <Grid item lg={6} md={6} sm={6} xs={12}>
             {/* <Button fullWidth={true} size="large" variant="contained" endIcon={<AddIcon />} >
@@ -118,10 +186,10 @@ const status = [
                 {/* Agrega los campos del nuevo curso aquí */}
               </DialogContent>
               <DialogActions>
-                <Button onClick={handleDialogClose} color="primary" variant="contained">
+                <Button onClick={handleDialogClose} color="error" variant="contained">
                   Cancelar
                 </Button>
-                <Button onClick={handleDialogClose} color="primary" variant="contained">
+                <Button onClick={handleDialogClose} color="success" variant="contained">
                   Guardar
                 </Button>
               </DialogActions>
