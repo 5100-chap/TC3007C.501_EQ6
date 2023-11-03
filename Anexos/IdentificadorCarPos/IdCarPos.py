@@ -6,7 +6,6 @@ def main():
     # Inicialización de clases
     face_class = FaceClass('Anexos/IdentificadorCarPos/Imagenes/')
     posture_class = PostureClass()
-    # tracking_class = TrackingClass()  # Si decides implementarla
 
     # Captura de video
     cap = cv2.VideoCapture(0)
@@ -26,13 +25,9 @@ def main():
         # Dibuja rectángulos y etiquetas
         frame = face_class.draw_faces(frame, face_locations, labels)
 
-        # Detección de manos levantadas
-        image_drawn = posture_class.detect_arms(frame)
-        # ... (código para procesar la detección de manos levantadas)
-
-        # Seguimiento de personas
-        # tracked_objects = tracking_class.update_trackers(frame, face_locations)
-        # ... (código para procesar objetos rastreados)
+        # Detección de manos levantadas y procesamiento de eventos de levantamiento de brazo
+        # Pasa las etiquetas a la función detect_arms para procesar los eventos de levantamiento de brazo
+        image_drawn = posture_class.detect_arms(frame, labels)
 
         # Mostrar el resultado
         cv2.imshow("Frame", image_drawn)
