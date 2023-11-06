@@ -58,6 +58,6 @@ class PostureClass:
         # Verificar la duración de los eventos de levantamiento de brazo
         current_time = time.time()
         for label, start_time in list(self.ongoing_events.items()):
-            if current_time - start_time > 4:
+            if current_time - start_time > 4 and label != "Desconocido":
                 print(f"{label} participó a las {time.strftime('%H:%M:%S')}")
                 del self.ongoing_events[label]  # El
