@@ -4,7 +4,6 @@ from auth.authManager import AuthManager
 
 #Variables globales
 url = "http://localhost:5000"
-
 app = Flask(__name__)
 azure_ad_manager = AzureADManager()
 auth_manager = AuthManager(url)

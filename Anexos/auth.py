@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-dotenv_path = Path('Anexos/backend/.env')
+dotenv_path = Path('Anexos/backend/config/.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 tenant_id = os.getenv("TENANT_ID")
@@ -27,9 +27,9 @@ token = token_r.json().get('access_token')
 graph_url = "https://graph.microsoft.com/v1.0/users"
 user_data = {
     "accountEnabled": True,
-    "displayName": "Nombre del Usuario",
-    "mailNickname": "Nickname",
-    "userPrincipalName": "usuarioprueba@facenlearn2.onmicrosoft.com",
+    "displayName": "Nombre de otro Usuario",
+    "mailNickname": "OtroNikcname",
+    "userPrincipalName": "usuarioprueba2@facenlearn2.onmicrosoft.com",
     "passwordProfile": {
         "forceChangePasswordNextSignIn": True,
         "password": "ComplexPa$$w0rd!"

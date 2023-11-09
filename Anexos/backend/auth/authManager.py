@@ -1,26 +1,21 @@
 from flask import session, redirect, url_for, request
 import requests
-from dotenv import load_dotenv
-from pathlib import Path
-import os
 import urllib.parse
-import jwt 
+import jwt
+import os
+from config import varConfig
 
 class AuthManager:
     def __init__(self, url):
-        # Carga las variables de entorno
-        dotenv_path = Path('Anexos/backend/.env')
-        load_dotenv(dotenv_path=dotenv_path)
-
         # Configuración de Azure AD B2C
-        self.tenant_id = os.getenv("TENANT_ID")
-        self.client_id = os.getenv("CLIENT_ID")
-        self.client_secret = os.getenv("CLIENT_SECRET")
+        self.tenant_id = varConfig.TENANT_ID
+        self.client_id = varConfig.CLIENT_ID
+        self.client_secret = varConfig.CLIENT_SECRET
         self.scope = "https://graph.microsoft.com/.default"
         self.grant_type = "client_credentials"
-        self.token_url = os.getenv("TOKEN_ENDPOINT")  # Asegúrate de que esta es la URL correcta para obtener el token
+        self.token_url = varConfig.TOKEN_ENDPOINT  # Asegúrate de que esta es la URL correcta para obtener el token
         self.redirect_uri = url + "/login-redirect"  # Asegúrate de cambiar esto a tu URI de redirección registrada
-        self.authority_url = os.getenv("AUTHORITY_URL") 
+        self.authority_url = varConfig.AUTHORITY_URL
         self.response_type = 'code'  # Tipo de respuesta esperada, en este caso un código de autorización
 
     def build_auth_url(self):

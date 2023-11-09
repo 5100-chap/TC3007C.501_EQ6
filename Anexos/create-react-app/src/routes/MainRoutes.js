@@ -1,5 +1,7 @@
 import { lazy } from 'react';
 
+import { API_BASE_URL } from 'config/apiConfig';
+
 // project imports
 import MainLayout from 'layout/MainLayout';
 import Loadable from 'ui-component/Loadable';
@@ -39,13 +41,13 @@ const MainRoutes = {
     },
     {
       path: 'camera',
-      element: <CameraDefault />
-      
+      element: <CameraDefault apiURL={API_BASE_URL + "/process_video"}/>
+
     },
     {
       path: 'inicio',
       element: <InicioDefault />
-      
+
     },
     {
       path: 'utils',
@@ -92,7 +94,6 @@ const MainRoutes = {
         }
       ]
     }
-   
   ]
 };
 
