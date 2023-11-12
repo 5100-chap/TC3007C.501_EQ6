@@ -1,124 +1,104 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, create_engine
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from config import varConfig
+class Aulas:
+    def __init__(self, AulaID, Nombre, Ubicacion):
+        self.AulaID = AulaID
+        self.Nombre = Nombre
+        self.Ubicacion = Ubicacion
 
-Base = declarative_base()
+class Estudiantes:
+    def __init__(self, EstudianteID, Nombre, Apellido, CorreoElectronico, AzureB2C_ID):
+        self.EstudianteID = EstudianteID
+        self.Nombre = Nombre
+        self.Apellido = Apellido
+        self.CorreoElectronico = CorreoElectronico
+        self.AzureB2C_ID = AzureB2C_ID
 
-# Definición del modelo Estudiante
-class Estudiante(Base):
-    __tablename__ = 'Estudiantes'
-    EstudianteID = Column(Integer, primary_key=True)
-    Nombre = Column(String)
-    Apellido = Column(String)
-    CorreoElectronico = Column(String)
-    AzureB2C_ID = Column(String)
+class OtrosUsuarios:
+    def __init__(self, UsuarioID, Nombre, Apellido, CorreoElectronico, AzureB2C_ID, Rol):
+        self.UsuarioID = UsuarioID
+        self.Nombre = Nombre
+        self.Apellido = Apellido
+        self.CorreoElectronico = CorreoElectronico
+        self.AzureB2C_ID = AzureB2C_ID
+        self.Rol = Rol
 
-# Definición del modelo Aula
-class Aula(Base):
-    __tablename__ = 'Aulas'
-    AulaID = Column(Integer, primary_key=True)
-    Nombre = Column(String, nullable=False)
-    Ubicacion = Column(String)
-    
-# Definición del modelo OtrosUsuarios
-class OtrosUsuarios(Base):
-    __tablename__ = 'OtrosUsuarios'
-    UsuarioID = Column(Integer, primary_key=True)
-    Nombre = Column(String, nullable=False)
-    Apellido = Column(String, nullable=False)
-    CorreoElectronico = Column(String, unique=True, nullable=False)
-    AzureB2C_ID = Column(String)
-    Rol = Column(String, nullable=False)
+class Profesores:
+    def __init__(self, ProfesorID, Nombre, Apellido, CorreoElectronico, AzureB2C_ID):
+        self.ProfesorID = ProfesorID
+        self.Nombre = Nombre
+        self.Apellido = Apellido
+        self.CorreoElectronico = CorreoElectronico
+        self.AzureB2C_ID = AzureB2C_ID
 
-# Definición del modelo Profesor
-class Profesor(Base):
-    __tablename__ = 'Profesores'
-    ProfesorID = Column(Integer, primary_key=True)
-    Nombre = Column(String)
-    Apellido = Column(String)
-    CorreoElectronico = Column(String, unique=True)
-    AzureB2C_ID = Column(String)
+class Cursos:
+    def __init__(self, CursoID, Nombre, Descripcion, ProfesorID):
+        self.CursoID = CursoID
+        self.Nombre = Nombre
+        self.Descripcion = Descripcion
+        self.ProfesorID = ProfesorID
 
-# Definición del modelo Curso
-class Curso(Base):
-    __tablename__ = 'Cursos'
-    CursoID = Column(Integer, primary_key=True)
-    Nombre = Column(String)
-    Descripcion = Column(String)
-    ProfesorID = Column(Integer, ForeignKey('Profesores.ProfesorID'))
-    profesor = relationship("Profesor", back_populates="cursos")
+class DatosVideo:
+    def __init__(self, VideoID, AulaID, FechaHora, RutaArchivo):
+        self.VideoID = VideoID
+        self.AulaID = AulaID
+        self.FechaHora = FechaHora
+        self.RutaArchivo = RutaArchivo
 
-# Definición del modelo DatosVideo
-class DatosVideo(Base):
-    __tablename__ = 'DatosVideo'
-    VideoID = Column(Integer, primary_key=True)
-    AulaID = Column(Integer, ForeignKey('Aulas.AulaID'))
-    FechaHora = Column(DateTime)
-    RutaArchivo = Column(String)
-    aula = relationship("Aula", back_populates="videos")
+class EventosIdentificacion:
+    def __init__(self, EventoID, VideoID, Tiempo, EstudianteID, ProfesorID, TipoEvento):
+        self.EventoID = EventoID
+        self.VideoID = VideoID
+        self.Tiempo = Tiempo
+        self.EstudianteID = EstudianteID
+        self.ProfesorID = ProfesorID
+        self.TipoEvento = TipoEvento
 
-# Definición del modelo EventosIdentificacion
-class EventosIdentificacion(Base):
-    __tablename__ = 'EventosIdentificacion'
-    EventoID = Column(Integer, primary_key=True)
-    VideoID = Column(Integer, ForeignKey('DatosVideo.VideoID'))
-    Tiempo = Column(DateTime)
-    EstudianteID = Column(Integer, ForeignKey('Estudiantes.EstudianteID'))
-    ProfesorID = Column(Integer, ForeignKey('Profesores.ProfesorID'))
-    TipoEvento = Column(String)
-    estudiante = relationship("Estudiante", back_populates="eventos_identificacion")
-    profesor = relationship("Profesor", back_populates="eventos_identificacion")
-    video = relationship("DatosVideo", back_populates="eventos_identificacion")
+class Inscripciones:
+    def __init__(self, InscripcionID, EstudianteID, CursoID):
+        self.InscripcionID = InscripcionID
+        self.EstudianteID = EstudianteID
+        self.CursoID = CursoID
 
-# Definición del modelo Transcripciones
-class Transcripciones(Base):
-    __tablename__ = 'Transcripciones'
-    TranscripcionID = Column(Integer, primary_key=True)
-    VideoID = Column(Integer, ForeignKey('DatosVideo.VideoID'))
-    Texto = Column(String)
-    video = relationship("DatosVideo", back_populates="transcripciones")
+class Transcripciones:
+    def __init__(self, TranscripcionID, VideoID, Texto):
+        self.TranscripcionID = TranscripcionID
+        self.VideoID = VideoID
+        self.Texto = Texto
 
-# Definición del modelo Clases
-class Clases(Base):
-    __tablename__ = 'Clases'
-    ClaseID = Column(Integer, primary_key=True)
-    CursoID = Column(Integer, ForeignKey('Cursos.CursoID'))
-    FechaHora = Column(DateTime)
-    Ubicacion = Column(String)
-    Nombre = Column(String)
-    curso = relationship("Curso", back_populates="clases")
+class Clases:
+    def __init__(self, ClaseID, CursoID, FechaHora, Ubicacion, Nombre):
+        self.ClaseID = ClaseID
+        self.CursoID = CursoID
+        self.FechaHora = FechaHora
+        self.Ubicacion = Ubicacion
+        self.Nombre = Nombre
 
-# Definición del modelo Estadisticas
-class Estadisticas(Base):
-    __tablename__ = 'Estadisticas'
-    EstadisticaID = Column(Integer, primary_key=True)
-    ClaseID = Column(Integer, ForeignKey('Clases.ClaseID'))
-    EstudianteID = Column(Integer, ForeignKey('Estudiantes.EstudianteID'))
-    PorcentajeAsistencia = Column(Float)
-    PorcentajeParticipacion = Column(Float)
-    estudiante = relationship("Estudiante", back_populates="estadisticas")
-    clase = relationship("Clases", back_populates="estadisticas")
+class CursoProfesores:
+    def __init__(self, CursoProfesorID, CursoID, ProfesorID):
+        self.CursoProfesorID = CursoProfesorID
+        self.CursoID = CursoID
+        self.ProfesorID = ProfesorID
 
-# Definición del modelo Participacion
-class Participacion(Base):
-    __tablename__ = 'Participacion'
-    ParticipacionID = Column(Integer, primary_key=True)
-    EstudianteID = Column(Integer, ForeignKey('Estudiantes.EstudianteID'))
-    ClaseID = Column(Integer, ForeignKey('Clases.ClaseID'))
-    TipoParticipacion = Column(String)
-    Detalles = Column(String)
-    Timestamp = Column(DateTime)
-    estudiante = relationship("Estudiante", back_populates="participaciones")
-    clase = relationship("Clases", back_populates="participaciones")
+class Estadisticas:
+    def __init__(self, EstadisticaID, ClaseID, EstudianteID, PorcentajeAsistencia, PorcentajeParticipacion):
+        self.EstadisticaID = EstadisticaID
+        self.ClaseID = ClaseID
+        self.EstudianteID = EstudianteID
+        self.PorcentajeAsistencia = PorcentajeAsistencia
+        self.PorcentajeParticipacion = PorcentajeParticipacion
 
-# Definición del modelo Asistencia
-class Asistencia(Base):
-    __tablename__ = 'Asistencia'
-    AsistenciaID = Column(Integer, primary_key=True)
-    EstudianteID = Column(Integer, ForeignKey('Estudiantes.EstudianteID'))
-    ClaseID = Column(Integer, ForeignKey('Clases.ClaseID'))
-    HoraEntrada = Column(DateTime)
-    HoraSalida = Column(DateTime)
-    estudiante = relationship("Estudiante", back_populates="asistencias")
-    clase = relationship("Clases", back_populates="asistencias")
+class Participacion:
+    def __init__(self, ParticipacionID, EstudianteID, ClaseID, TipoParticipacion, Detalles, Timestamp):
+        self.ParticipacionID = ParticipacionID
+        self.EstudianteID = EstudianteID
+        self.ClaseID = ClaseID
+        self.TipoParticipacion = TipoParticipacion
+        self.Detalles = Detalles
+        self.Timestamp = Timestamp
+
+class Asistencia:
+    def __init__(self, AsistenciaID, EstudianteID, ClaseID, HoraEntrada, HoraSalida):
+        self.AsistenciaID = AsistenciaID
+        self.EstudianteID = EstudianteID
+        self.ClaseID = ClaseID
+        self.HoraEntrada = HoraEntrada
+        self.HoraSalida = HoraSalida

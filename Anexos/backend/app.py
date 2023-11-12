@@ -1,42 +1,56 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from auth.AzureADManager import AzureADManager
 from auth.authManager import AuthManager
+from databases.DatabaseManager import DatabaseManager
+from config.varConfig import FLASK_SECRET_KEY
 
 #Variables globales
 url = "http://localhost:5000"
 app = Flask(__name__)
-azure_ad_manager = AzureADManager()
-auth_manager = AuthManager(url)
+CORS(app, supports_credentials=True)
+db_manager = DatabaseManager()
+azure_ad_manager = AzureADManager(db_manager)
+auth_manager = AuthManager(url, db_manager)
 
+app.secret_key = FLASK_SECRET_KEY
 
 @app.route("/register", methods=["POST"])
 def register():
-    user_data = request.json
-    response = azure_ad_manager.register_user(user_data)
-    if response.status_code == 201:
-        return jsonify(response.json()), 201
-    else:
+    data = request.json
+    user_id = data.get("user_id")  
+    user_data = data.get("user_data")
+    user_role = data.get("user_role")
+
+    try:
+        response = azure_ad_manager.register_user(user_id, user_data, user_role)
         return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route("/update_user/<user_id>", methods=["PATCH"])
-def update_user(user_id):
+@app.route("/update_user/<user_id>/<user_role>", methods=["PATCH"])
+def update_user(user_id, user_role):
     update_data = request.json
-    response = azure_ad_manager.update_user(user_id, update_data)
-    if response.status_code == 204:
-        return jsonify({"message": "User updated successfully"}), 204
-    else:
-        return jsonify(response.json()), response.status_code
+    try:
+        response = azure_ad_manager.update_user(user_id, update_data, user_role)
+        if response.status_code == 204:
+            return jsonify({"message": "User updated successfully"}), 204
+        else:
+            return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-
-@app.route("/delete_user/<user_id>", methods=["DELETE"])
-def delete_user(user_id):
-    response = azure_ad_manager.delete_user(user_id)
-    if response.status_code == 204:
-        return jsonify({"message": "User deleted successfully"}), 204
-    else:
-        return jsonify(response.json()), response.status_code
-
+@app.route("/delete_user/<user_id>/<user_role>", methods=["DELETE"])
+def delete_user(user_id, user_role):
+    try:
+        response = azure_ad_manager.delete_user(user_id, user_role)
+        if response.status_code == 204:
+            return jsonify({"message": "User deleted successfully"}), 204
+        else:
+            return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/login")
 def login():

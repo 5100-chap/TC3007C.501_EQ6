@@ -31,7 +31,7 @@ user_data = {
     "mailNickname": "OtroNikcname",
     "userPrincipalName": "usuarioprueba2@facenlearn2.onmicrosoft.com",
     "passwordProfile": {
-        "forceChangePasswordNextSignIn": True,
+        "forceChangePasswordNextSignIn": False,
         "password": "ComplexPa$$w0rd!"
     }
 }
