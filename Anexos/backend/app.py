@@ -4,14 +4,17 @@ from auth.AzureADManager import AzureADManager
 from auth.authManager import AuthManager
 from databases.DatabaseManager import DatabaseManager
 from config.varConfig import FLASK_SECRET_KEY
+from models.MLmodel import MLmodel
 
 #Variables globales
 url = "http://localhost:5000"
+fronturl = "http://localhost:3000"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 db_manager = DatabaseManager()
 azure_ad_manager = AzureADManager(db_manager)
-auth_manager = AuthManager(url, db_manager)
+auth_manager = AuthManager(url, db_manager, fronturl)
+ml_model = MLmodel(db_manager)
 
 app.secret_key = FLASK_SECRET_KEY
 

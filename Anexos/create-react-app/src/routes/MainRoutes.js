@@ -1,6 +1,7 @@
 import { lazy } from 'react';
-
-import { API_BASE_URL } from 'config/apiConfig';
+import { Navigate } from 'react-router-dom';
+import { isJwtExpired } from "jwt-check-expiration"; // import the library
+import { API_BASE_URL} from 'config/apiConfig';
 
 // project imports
 import MainLayout from 'layout/MainLayout';
@@ -17,12 +18,21 @@ const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialIcons')));
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
 
-// sample page routing
-//const SamplePage = Loadable(lazy(() => import('views/sample-page')));
+
+
+const checkTokenValidity = (token) => {
+  try {
+    return isJwtExpired(token) ? false : true;
+  } catch (error) {
+    console.error("Invalid token provided");
+    return false;
+  }
+};
 
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
+
   path: '/',
   element: <MainLayout />,
   children: [
@@ -35,26 +45,24 @@ const MainRoutes = {
       children: [
         {
           path: 'default',
-          element: <DashboardDefault />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <DashboardDefault /> : <Navigate to="/login" />
         }
       ]
     },
     {
       path: 'camera',
-      element: <CameraDefault apiURL={API_BASE_URL + "/process_video"}/>
-
+      element: checkTokenValidity(localStorage.getItem("jwt")) ? <CameraDefault apiURL={API_BASE_URL + "/process_video"} /> : <Navigate to="/login" />
     },
     {
       path: 'inicio',
-      element: <InicioDefault />
-
+      element: checkTokenValidity(localStorage.getItem("jwt")) ? <InicioDefault /> : <Navigate to="/login" />
     },
     {
       path: 'utils',
       children: [
         {
           path: 'util-typography',
-          element: <UtilsTypography />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <UtilsTypography /> : <Navigate to="/login" />
         }
       ]
     },
@@ -63,7 +71,7 @@ const MainRoutes = {
       children: [
         {
           path: 'util-color',
-          element: <UtilsColor />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <UtilsColor /> : <Navigate to="/login" />
         }
       ]
     },
@@ -72,7 +80,7 @@ const MainRoutes = {
       children: [
         {
           path: 'util-shadow',
-          element: <UtilsShadow />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <UtilsShadow /> : <Navigate to="/login" />
         }
       ]
     },
@@ -81,7 +89,7 @@ const MainRoutes = {
       children: [
         {
           path: 'tabler-icons',
-          element: <UtilsTablerIcons />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <UtilsTablerIcons /> : <Navigate to="/login" />
         }
       ]
     },
@@ -90,7 +98,7 @@ const MainRoutes = {
       children: [
         {
           path: 'material-icons',
-          element: <UtilsMaterialIcons />
+          element: checkTokenValidity(localStorage.getItem("jwt")) ? <UtilsMaterialIcons /> : <Navigate to="/login" />
         }
       ]
     }
@@ -98,3 +106,5 @@ const MainRoutes = {
 };
 
 export default MainRoutes;
+
+

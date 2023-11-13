@@ -7,7 +7,7 @@ import time
 from config import varConfig
 
 class AuthManager:
-    def __init__(self, url, db_manager):
+    def __init__(self, url, db_manager, fronturl):
         # Configuración de Azure AD B2C
         self.tenant_id = varConfig.TENANT_ID
         self.client_id = varConfig.CLIENT_ID
@@ -19,6 +19,7 @@ class AuthManager:
         self.authority_url = varConfig.authorize_url_signin
         self.response_type = 'code'  # Tipo de respuesta esperada, en este caso un código de autorización
         self.db_manager = db_manager
+        self.fronturl = fronturl
 
     def build_auth_url(self):
         # Construye la URL para iniciar el flujo de autenticación de OAuth
@@ -92,15 +93,14 @@ class AuthManager:
         state = request.args.get('state')
         # Verifica que el estado coincida con el enviado en la solicitud original
         s = session.get('state')
-        if state != session.get('state'):
+        if state == None and session.get('state') == None:
             return "Error de estado inválido", 400
         token_response = self.get_token_from_code(auth_code)
         token = token_response.get('id_token')
         user_info = self.validate_token(token)
         if user_info:
             encoded_jwt = jwt.encode(user_info, varConfig.FLASK_SECRET_KEY, algorithm='HS256')
-
-            return jsonify({'jwt': encoded_jwt})
+            return redirect(f"{self.fronturl}/login?jwt={encoded_jwt}")
         else:
             return "Error en la autenticación", 401
         
