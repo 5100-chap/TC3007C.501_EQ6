@@ -3,28 +3,38 @@ from faceClass import FaceClass
 from postureClass import PostureClass
 
 def main():
-    face_class = FaceClass("Anexos/IdentificadorCarPos/Imagenes/")
+    # Inicialización de clases
+    face_class = FaceClass('Anexos/IdentificadorCarPos/Imagenes/')
     posture_class = PostureClass()
-    
+
+    # Captura de video
     cap = cv2.VideoCapture(0)
-    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
+            print("Failed to grab frame.")
             break
-        
+
+        frame = cv2.flip(frame, 1)
+        orig = frame.copy()
+
+        # Reconocimiento facial y registro de asistencia
         face_locations, labels = face_class.recognize_faces(frame)
-        for (top, right, bottom, left), label in zip(face_locations, labels):
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-            cv2.rectangle(frame, (left, bottom - 25), (right, bottom), (0, 255, 0), cv2.FILLED)
-            font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, label, (left + 6, bottom - 6), font, 0.5, (255, 255, 255), 1)
+        face_class.register_attendance(labels)
         
-        arm_frame = posture_class.detect_arms(frame)
-        
-        cv2.imshow('Frame', arm_frame)
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+        # Dibuja rectángulos y etiquetas
+        frame = face_class.draw_faces(frame, face_locations, labels)
+
+        # Detección de manos levantadas y procesamiento de eventos de levantamiento de brazo
+        # Pasa las etiquetas a la función detect_arms para procesar los eventos de levantamiento de brazo
+        image_drawn = posture_class.detect_arms(frame, labels)
+
+        # Mostrar el resultado
+        cv2.imshow("Frame", image_drawn)
+        k = cv2.waitKey(1) & 0xFF
+        if k == 27:
             break
+
     cap.release()
     cv2.destroyAllWindows()
 
