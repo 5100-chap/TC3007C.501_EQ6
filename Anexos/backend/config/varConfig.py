@@ -14,8 +14,6 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 AZURE_SQL_CONNECTION_STRING = os.getenv("AZURE_SQL_CONNECTION_STRING")
 AZURE_SQL_CONNECTION_STRING_TCP= os.getenv("AZURE_SQL_CONNECTION_STRING_TCP")
 
-
-
 connection_string = AZURE_SQL_CONNECTION_STRING_TCP
 
 DBserver = re.search(r'tcp:(.*?),', connection_string).group(1)
@@ -33,6 +31,8 @@ FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 
 # Base URL para Azure AD b2c
 BASE_URL = "https://facenlearn2.b2clogin.com/facenlearn2.onmicrosoft.com/"
+# Obtener el dominio del inquilino a partir del enlace
+TENANT_DOMAIN = re.search(r'https://(.*?)\.b2clogin\.com', BASE_URL).group(1)
 
 # Función para construir URLs específicas de la política
 def build_policy_url(policy_name, endpoint_type):

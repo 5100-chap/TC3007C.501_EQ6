@@ -11,7 +11,7 @@ url = "http://localhost:5000"
 fronturl = "http://localhost:3000"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-db_manager = DatabaseManager()
+db_manager = DatabaseManager(isFreeDB=False)
 azure_ad_manager = AzureADManager(db_manager)
 auth_manager = AuthManager(url, db_manager, fronturl)
 ml_model = MLmodel(db_manager)
@@ -21,9 +21,9 @@ app.secret_key = FLASK_SECRET_KEY
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
-    user_id = data.get("user_id")  
-    user_data = data.get("user_data")
-    user_role = data.get("user_role")
+    user_id = data.get("userID")  
+    user_data = data
+    user_role = data.get("Rol")
 
     try:
         response = azure_ad_manager.register_user(user_id, user_data, user_role)
