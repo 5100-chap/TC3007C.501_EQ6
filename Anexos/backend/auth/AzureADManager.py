@@ -62,29 +62,7 @@ class AzureADManager:
 
         response.raise_for_status()
         return response
-
-    def register_user(self, user_id, user_data, user_role):
-        # Preparar datos para Azure AD B2C (eliminar 'Rol' si está presente)
-        b2c_data = {key: value for key, value in user_data.items() if key != 'Rol'}
-
-        # Registro en Azure AD B2C
-        b2c_response = self.make_request("post", self.graph_url, b2c_data)
-        if b2c_response.status_code != 201:
-            raise Exception("Error al registrar en Azure AD B2C")
-
-        azure_b2c_id = b2c_response.json().get("id")
-        user_data["AzureB2C_ID"] = azure_b2c_id
-
-        # Registro en la base de datos
-        try:
-            self.db_manager.register_user(user_id, user_data, user_role)
-        except Exception as e:
-            self.delete_user(azure_b2c_id)
-            raise e
-
-        return b2c_response
-
-
+    
     def update_user(self, user_id, user_data, user_role):
         # Actualiza el usuario en Azure AD B2C
         user_url = f"{self.graph_url}/{user_id}"
@@ -106,3 +84,30 @@ class AzureADManager:
             self.db_manager.delete_user(user_id, user_role)
 
         return b2c_response
+
+    def register_user(self, user_id, user_data, user_role):
+        # Preparar datos para Azure AD B2C (eliminar 'Rol' si está presente)
+        b2c_data = {key: value for key, value in user_data.items() if (key != 'Rol' and key != 'userID' and key != 'Admin_id')}
+        b2c_data['identities'][0]['issuer'] = b2c_data['identities'][0]['issuer'].replace("your_tenant_name", varConfig.TENANT_DOMAIN)
+        print(b2c_data)
+        # Registro en Azure AD B2C
+        b2c_response = self.make_request("post", self.graph_url, b2c_data)
+        if b2c_response.status_code != 201:
+            raise Exception("Error al registrar en Azure AD B2C")
+
+        azure_b2c_id = b2c_response.json().get("id")
+        user_data["AzureB2C_ID"] = azure_b2c_id
+
+        # Registro en la base de datos
+        try:
+            self.db_manager.register_user(user_id, user_data, user_role)
+        except Exception as e:
+            user_url = f"{self.graph_url}/{azure_b2c_id}"
+            b2c_response = self.make_request("delete", user_url)
+            print(b2c_response)
+            raise e
+
+        return b2c_response
+
+
+

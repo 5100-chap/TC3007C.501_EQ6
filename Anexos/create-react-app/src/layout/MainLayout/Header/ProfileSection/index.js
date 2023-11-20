@@ -86,6 +86,21 @@ const ProfileSection = () => {
     prevOpen.current = open;
   }, [open]);
 
+  const handleAddProfile = () => {
+    const jwt = localStorage.getItem('jwt');
+    if (jwt) {
+      const [, payload] = jwt.split('.');
+      const decodedPayload = JSON.parse(Buffer.toString(payload));
+      const userRole = decodedPayload.user_role;
+      if (userRole === 'Admin' || userRole === 'Mod' || userRole === 'Dueño') {
+        // Aquí puedes abrir un diálogo o navegar a una nueva página para agregar un nuevo perfil
+        // Luego, al guardar los cambios, puedes actualizar los datos de los perfiles en el estado del componente y en el backend
+        console.log('Agregar perfil');
+      }
+    }
+  };
+  
+
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
     if (jwt) {
@@ -94,6 +109,12 @@ const ProfileSection = () => {
       setUser({ name: decodedPayload.given_name + " " + decodedPayload.family_name, role: decodedPayload.user_role });
     }
   }, []);
+
+  const handleEditProfile = () => {
+    // Aquí puedes abrir un diálogo o navegar a una nueva página para editar los datos del usuario
+    // Luego, al guardar los cambios, puedes actualizar los datos del usuario en el estado del componente y en el backend
+    console.log('Editar perfil');
+  };
 
   return (
     <>
@@ -213,15 +234,18 @@ const ProfileSection = () => {
                           selected={selectedIndex === 0}
                           onClick={(event) => handleListItemClick(event, 0, '#')}
                         >
-                          <ListItemIcon>
+                          <ListItemIcon
+                            sx={{ borderRadius: `${customization.borderRadius}px` }}
+                            selected={selectedIndex === 1}
+                            onClick={handleEditProfile}>
                             <IconSettings stroke={1.5} size="1.3rem" />
                           </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
+                          <ListItemText primary={<Typography variant="body2">Editar Perfil</Typography>} />
                         </ListItemButton>
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 1}
-                          onClick={(event) => handleListItemClick(event, 1, '#')}
+                          onClick={handleAddProfile}
                         >
                           <ListItemIcon>
                             <IconUser stroke={1.5} size="1.3rem" />
@@ -230,7 +254,7 @@ const ProfileSection = () => {
                             primary={
                               <Grid container spacing={1} justifyContent="space-between">
                                 <Grid item>
-                                  <Typography variant="body2">Editar Perfil</Typography>
+                                  <Typography variant="body2">Agregar Perfil</Typography>
                                 </Grid>
                               </Grid>
                             }

@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isJwtExpired } from "jwt-check-expiration"; // Usa una librería para verificar la caducidad del JWT
