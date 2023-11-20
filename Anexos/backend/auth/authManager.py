@@ -71,8 +71,8 @@ class AuthManager:
                 raise ValueError("Audience Mismatch")
             if decoded_token['exp'] < int(time.time()):
                 raise ValueError("Token Expired")
-            email = decoded_token['emails'][0]
-            user_role = self.db_manager.get_user_role(email)
+            oid = decoded_token['oid']
+            user_role = self.db_manager.get_user_role(oid)
             decoded_token['user_role'] = user_role
 
             return decoded_token

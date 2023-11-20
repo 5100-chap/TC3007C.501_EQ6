@@ -40,3 +40,26 @@ class MLmodel:
 
         cap.release()
         cv2.destroyAllWindows()
+        
+    def process_image(self, image):
+        # Asumimos que 'image' es una imagen de OpenCV (un ndarray de NumPy)
+
+        # Paso 1: Reconocimiento de Rostros
+        face_locations, labels = self.face_class.recognize_faces(image)
+        self.face_class.register_attendance(labels)
+        image_with_faces = self.face_class.draw_faces(image, face_locations, labels)
+
+        # Paso 2: Detección de Posturas
+        image_with_posture = self.posture_class.detect_arms(image_with_faces, labels)
+
+        # Paso 3: Preparar los resultados
+        # Aquí puedes incluir cualquier información adicional que quieras devolver,
+        # como estadísticas, etiquetas de rostros detectados, etc.
+        results = {
+            "detected_faces": len(face_locations),
+            "detected_labels": labels,
+            # ... otros resultados ...
+        }
+
+        # Devolver la imagen procesada y los resultados
+        return image_with_posture, results

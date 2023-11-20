@@ -2,46 +2,99 @@
 // project imports
 import MainCard from "ui-component/cards/MainCard";
 // material-ui
-import { Grid } from "@mui/material";
+import { Grid, MenuItem, Select } from "@mui/material";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
 import Button from "@mui/material/Button";
 import Webcam from "react-webcam";
-
-import React, { useRef, useState } from "react";
+import { API_BASE_URL } from "config/apiConfig";
+import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
+import jwt from "jwt-decode";
 // ==============================|| SAMPLE PAGE ||============================== //
 
 const Camera = ({ apiURL }) => {
 	const webcamRef = useRef(null);
 	const [imageSrc, setImageSrc] = useState(null);
+	const [processedImage, setProcessedImage] = useState(null);
+	const [courses, setCourses] = useState([]);
+	const [selectedCourse, setSelectedCourse] = useState("");
+	const [transformedCourse, setTransformedCourse] = useState([]);
+	const [isCourseSelected, setIsCourseSelected] = useState(false);
+	const [isVideoStreaming, setIsVideoStreaming] = useState(false);
 
-	// Función para capturar la imagen de la cámara
-	const capture = React.useCallback(() => {
-		const imageSrc = webcamRef.current.getScreenshot();
-		setImageSrc(imageSrc);
-	}, [webcamRef]);
+	useEffect(() => {
+		// Función para obtener los cursos de la API
+		const fetchCourses = async () => {
+			try {
+				// Decifrar el JWT almacenado en localStorage y obtener los valores necesarios
+				const token = jwt(localStorage.getItem("jwt"));
+				// Realizar la solicitud POST a la API para obtener los cursos
+				const response = await axios.post(
+					`${API_BASE_URL}/obtain_clases_info`,
+					{
+						oid: token.oid,
+						user_role: token.user_role,
+					}
+				);
+				// Almacenar los cursos en el estado
+				setCourses(response.data);
+				// Transformar los datos para que coincidan con la estructura esperada
+				const transformedCourses = response.data.map((courseArray) => ({
+					id: courseArray[0],
+					name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
+				}));
+				setTransformedCourse(transformedCourses);
+			} catch (error) {
+				console.error("Error al obtener los cursos", error);
+			}
+		};
 
-	// Función para enviar la imagen capturada a la API
-	const sendImageToAPI = () => {
+		fetchCourses();
+		console.log(courses);
+	}, []);
+
+	useEffect(() => {
+		// Verificar si un curso está seleccionado
+		if (selectedCourse !== "") {
+			setIsCourseSelected(true);
+		} else {
+			setIsCourseSelected(false);
+		}
+	}, [selectedCourse]);
+
+	// Función para capturar el video de la cámara y enviarlo a la API
+	const captureVideo = () => {
+		setIsVideoStreaming(!isVideoStreaming);
+	};
+
+	useEffect(() => {
+		let interval;
+		if (isVideoStreaming) {
+			interval = setInterval(() => {
+				const imageSrc = webcamRef.current.getScreenshot();
+				sendImageToAPI(imageSrc);
+			}, 500); // Captura cada ms
+		}
+
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [isVideoStreaming]);
+
+	// Función para enviar la imagen capturada y el curso seleccionado a la API
+	const sendImageToAPI = (imageSrc) => {
 		axios
-			.post(apiURL, { image: imageSrc })
+			.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse })
 			.then((response) => {
 				// Manejo de la respuesta
-				console.log(response.data);
+				setProcessedImage(`data:image/jpeg;base64,${response.data.image}`);
 			})
 			.catch((error) => {
 				// Manejo de errores
 				console.error("Error al enviar la imagen", error);
 			});
-	};
-
-	const captureVideo = () => {
-		const interval = setInterval(() => {
-			const imageSrc = webcamRef.current.getScreenshot();
-			sendImageToAPI(imageSrc);
-		}, 100); // Captura cada 100 ms
-
-		return () => clearInterval(interval);
 	};
 
 	return (
@@ -53,23 +106,33 @@ const Camera = ({ apiURL }) => {
 						ref={webcamRef}
 						screenshotFormat="image/jpeg"
 					/>
+					{/* Mostrar la imagen procesada */}
+					{processedImage && <img src={processedImage} alt="Processed" />}
 				</Grid>
 				<Grid item lg={6} md={6} sm={6} xs={6}></Grid>
 				<Button
-					onClick={capture}
+					onClick={captureVideo}
 					variant="contained"
 					endIcon={<VideoCallIcon />}
 					color="secondary"
+					disabled={!isCourseSelected}
 				>
-					Capturar Imagen
+					{isVideoStreaming ? "Parar Video" : "Iniciar Video"}
 				</Button>
-				<Button
-					onClick={captureVideo}
-					variant="contained"
-					color="primary"
+				<Select
+					value={selectedCourse}
+					onChange={(event) => setSelectedCourse(event.target.value)}
 				>
-					Iniciar Video
-				</Button>
+					{transformedCourse.map((transformedCourse) => (
+						<MenuItem
+							key={transformedCourse.id}
+							value={transformedCourse.id}
+						>
+							{transformedCourse.name}
+						</MenuItem>
+					))}
+				</Select>
+				{!isCourseSelected && <p>Favor de seleccionar un curso</p>}
 			</Grid>
 		</MainCard>
 	);

@@ -17,7 +17,7 @@ class FaceClass:
         self.attendance_recorded = (
             {}
         )  # Añade un diccionario para llevar un registro de las personas a las que se les ha tomado asistencia
-        
+
         # Deteccion de caras en imagenes de referencia
         for filename in os.listdir(student_images_folder_path):
             if filename.endswith(".png") or filename.endswith(".jpg"):
@@ -82,9 +82,15 @@ class FaceClass:
                     self.face_counts[label] += 1
 
                 # Verifica si se han cumplido las condiciones para marcar la asistencia
-                if (self.face_counts[label] >= 6 or (current_time - self.face_first_seen[label] >= 10)):
-                    print(f"{label} asistió a las {time.strftime('%H:%M:%S', time.localtime(current_time))}.")
-                    self.attendance_recorded[label] = True  # Marca que se ha tomado asistencia para esta persona
+                if self.face_counts[label] >= 6 or (
+                    current_time - self.face_first_seen[label] >= 10
+                ):
+                    print(
+                        f"{label} asistió a las {time.strftime('%H:%M:%S', time.localtime(current_time))}."
+                    )
+                    self.attendance_recorded[
+                        label
+                    ] = True  # Marca que se ha tomado asistencia para esta persona
                     # Elimina los registros para liberar memoria
                     del self.face_counts[label]
                     del self.face_first_seen[label]

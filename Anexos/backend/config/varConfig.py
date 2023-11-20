@@ -25,6 +25,7 @@ DBport = re.search(r',(\d+);', connection_string).group(1)
 # Configuración de Azure Blob Storage
 AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZURE_STORAGE_CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+AZURE_STORAGE_ACCOUNT_NAME = re.search(r'AccountName=(.*?);', AZURE_STORAGE_CONNECTION_STRING).group(1)
 
 # Llave secreta para flask
 FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
