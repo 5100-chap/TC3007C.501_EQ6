@@ -73,7 +73,10 @@ const Camera = ({ apiURL }) => {
 			interval = setInterval(() => {
 				const imageSrc = webcamRef.current.getScreenshot();
 				sendImageToAPI(imageSrc);
-			}, 500); // Captura cada ms
+			}, 800); // Captura cada ms
+		} else {
+			const imageSrc = webcamRef.current.getScreenshot();
+			sendImageToAPI(imageSrc, true);
 		}
 
 		return () => {
@@ -84,9 +87,9 @@ const Camera = ({ apiURL }) => {
 	}, [isVideoStreaming]);
 
 	// Función para enviar la imagen capturada y el curso seleccionado a la API
-	const sendImageToAPI = (imageSrc) => {
+	const sendImageToAPI = (imageSrc, typeRequest = false) => {
 		axios
-			.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse })
+			.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse, type_request: typeRequest })
 			.then((response) => {
 				// Manejo de la respuesta
 				setProcessedImage(`data:image/jpeg;base64,${response.data.image}`);

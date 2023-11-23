@@ -148,6 +148,7 @@ def receive_fps_ml():
     data = request.json
     image_src = data.get("image")
     selected_course = data.get("course")
+    type_request = False or data.get("type_request")
 
     try:
         # Decodificar la imagen base64 y convertirla en una matriz de imagen
@@ -157,9 +158,12 @@ def receive_fps_ml():
 
         # Guardar la imagen original temporalmente
         #cv2.imwrite("temp_original.jpg", img)
-
-        # Procesar la imagen
-        processed_image, results = ml_model.process_image(img)
+        if type_request != False:
+            #Llamada para que suba todo a la base de datos
+            processed_image, results = ml_model.process_image(img, True, selected_course)
+        else:
+            # Procesar la imagen
+            processed_image, results = ml_model.process_image(img)
 
         # Guardar la imagen procesada temporalmente
         #cv2.imwrite("temp_processed.jpg", processed_image)
@@ -180,8 +184,3 @@ def receive_fps_ml():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    # Importar el módulo necesario
-
-    # ...
-
-    

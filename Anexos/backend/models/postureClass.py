@@ -12,6 +12,7 @@ class PostureClass:
         self.transition_duration = 2  # Duración de la transición en segundos
         self.transition_start_time = 0  # Tiempo de inicio de la transición
         self.use_cuda = cv2.cuda.getCudaEnabledDeviceCount() > 0
+        self.participations = {}
 
     def detect_arms(self, frame, labels):
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -60,8 +61,9 @@ class PostureClass:
         # Verificar la duración de los eventos de levantamiento de brazo
         current_time = time.time()
         for label, start_time in list(self.ongoing_events.items()):
-            if current_time - start_time > 4 and label != "Desconocido":
-                print(f"{label} participó a las {time.strftime('%H:%M:%S')}")
+            if current_time - start_time > 5 and label != "Desconocido":
+                self.participations[label] = time.strftime('%H:%M:%S', time.localtime(current_time))  # Guarda el tiempo de asistencia
+                participation = f"{label} participó a las {time.strftime('%H:%M:%S')}"
                 del self.ongoing_events[label]
 
     def is_transition_in_progress(self):
@@ -76,3 +78,8 @@ class PostureClass:
         g = int(color_start[1] + (color_end[1] - color_start[1]) * progress)
         b = int(color_start[2] + (color_end[2] - color_start[2]) * progress)
         return (r, g, b)
+
+    def get_participations(self):
+        res = self.participations
+        self.participations = {}
+        return res
