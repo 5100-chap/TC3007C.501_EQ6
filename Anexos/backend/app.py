@@ -9,7 +9,7 @@ from models.MLmodel import MLmodel
 import base64
 import numpy as np
 import cv2
-import os
+
 
 # Variables globales
 url = "http://localhost:5000"
