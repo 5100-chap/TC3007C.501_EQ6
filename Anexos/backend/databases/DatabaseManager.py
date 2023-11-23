@@ -4,7 +4,7 @@ from config import varConfig
 import threading
 import datetime
 from collections.abc import Iterable
-
+import contextlib
 
 class DatabaseManager:
     def __init__(self, isFreeDB=False):
@@ -12,6 +12,19 @@ class DatabaseManager:
         self.cursor = None
         self.isFreeDB = isFreeDB
         self.connect()
+        
+    @contextlib.contextmanager
+    def get_db_connection(self):
+        conn = pymssql.connect(
+            server=varConfig.DBserver,
+            user=varConfig.DBuser,
+            password=varConfig.DBpassword,
+            database=varConfig.DBname,
+        )
+        try:
+            yield conn
+        finally:
+            conn.close()
         
     #Conexion al sql
     def connect(self):
@@ -57,89 +70,14 @@ class DatabaseManager:
     
     #Funcion para ejecutar una query
     def execute_query(self, query, params=None, fetchone=False):
-        try:
-            isSelect = True if query.lower().startswith("select") else False
-            self.cursor.execute(query, params)
-            if isSelect:
-                queryRes = (
-                    self.cursor.fetchone() if fetchone else self.cursor.fetchall()
-                )
-                # Verificar si hay valores datetime o time en queryRes y serializarlos
-                queryRes = [
-                    self.serialize_datetime(item)
-                    if isinstance(item, (datetime.datetime, datetime.time))
-                    else [
-                        self.serialize_datetime(sub_item)
-                        if isinstance(sub_item, (datetime.datetime, datetime.time))
-                        else sub_item
-                        for sub_item in item
-                    ]
-                    if self.is_non_string_iterable(item)
-                    else item
-                    for item in queryRes
-                ]
-            else:
-                queryRes = 0
-            self.conn.commit()
-            return queryRes
-        #Reintenta la query
-        except pymssql._pymssql.OperationalError as e:
-            error_message = str(e)
-            if "severity 9: DBPROCESS is dead or not enabled" in error_message:
-                print("Error al ejecutar la query: " + query)
-                print(e)
-                print("Reintentando conexión...")
-                self.connect()
-                try:
-                    isSelect = True if query.lower().startswith("select") else False
-                    self.cursor.execute(query, params)
-                    if isSelect:
-                        queryRes = (
-                            self.cursor.fetchone()
-                            if fetchone
-                            else self.cursor.fetchall()
-                        )
-                        # Verificar si hay valores datetime o time en queryRes y serializarlos
-                        queryRes = [
-                            self.serialize_datetime(item)
-                            if isinstance(item, (datetime.datetime, datetime.time))
-                            else [
-                                self.serialize_datetime(sub_item)
-                                if isinstance(
-                                    sub_item, (datetime.datetime, datetime.time)
-                                )
-                                else sub_item
-                                for sub_item in item
-                            ]
-                            if self.is_non_string_iterable(item)
-                            else item
-                            for item in queryRes
-                        ]
-                    else:
-                        queryRes = 0
-                    self.conn.commit()
-                    return queryRes
-                except Exception as e:
-                    print("Error al ejecutar la query: " + query)
-                    print(e)
-                    self.conn.rollback()
-                    raise e
-            else:
-                print("Error al ejecutar la query: " + query)
-                print(e)
-                self.conn.rollback()
-                raise e
-            
-    #Funcion para ejecutar varias queries
-    def execute_queries(self, queries, params=None, fetchone=False):
-        results = []
-        try:
-            for query in queries:
+        with self.get_db_connection() as conn:
+            try:
+                cursor = conn.cursor()
                 isSelect = True if query.lower().startswith("select") else False
-                self.cursor.execute(query, params)
+                cursor.execute(query, params)
                 if isSelect:
                     queryRes = (
-                        self.cursor.fetchone() if fetchone else self.cursor.fetchall()
+                        cursor.fetchone() if fetchone else cursor.fetchall()
                     )
                     # Verificar si hay valores datetime o time en queryRes y serializarlos
                     queryRes = [
@@ -156,61 +94,62 @@ class DatabaseManager:
                         for item in queryRes
                     ]
                 else:
-                    queryRes = 0
-                results.append(queryRes)
-            self.conn.commit()
-            return results
-
-        except pymssql._pymssql.OperationalError as e:
-            error_message = str(e)
-            if "severity 9: DBPROCESS is dead or not enabled" in error_message:
-                print("Error al ejecutar las queries")
-                print(e)
-                print("Reintentando conexión...")
-                self.connect()
-                try:
-                    results = []
-                    for query in queries:
-                        isSelect = True if query.lower().startswith("select") else False
-                        self.cursor.execute(query, params)
-                        if isSelect:
-                            queryRes = (
-                                self.cursor.fetchone()
-                                if fetchone
-                                else self.cursor.fetchall()
-                            )
-                            # Verificar si hay valores datetime o time en queryRes y serializarlos
-                            queryRes = [
-                                self.serialize_datetime(item)
-                                if isinstance(item, (datetime.datetime, datetime.time))
-                                else [
-                                    self.serialize_datetime(sub_item)
-                                    if isinstance(
-                                        sub_item, (datetime.datetime, datetime.time)
-                                    )
-                                    else sub_item
-                                    for sub_item in item
-                                ]
-                                if self.is_non_string_iterable(item)
-                                else item
-                                for item in queryRes
-                            ]
-                        else:
-                            queryRes = 0
-                        results.append(queryRes)
-                    self.conn.commit()
-                    return results
-                except Exception as e:
-                    print("Error al ejecutar las queries")
+                    queryRes = cursor.lastrowid if cursor.lastrowid else 0
+                conn.commit()
+                cursor.close()
+                return queryRes
+            #Reintenta la query
+            except pymssql._pymssql.OperationalError as e:
+                error_message = str(e)
+                if "severity 9: DBPROCESS is dead or not enabled" in error_message:
+                    print("Error al ejecutar la query: " + query)
                     print(e)
-                    self.conn.rollback()
+                    print("Reintentando conexión...")
+                    with self.get_db_connection() as conn:
+                        try:
+                            cursor = conn.cursor()
+                            isSelect = True if query.lower().startswith("select") else False
+                            cursor.execute(query, params)
+                            if isSelect:
+                                queryRes = (
+                                    cursor.fetchone()
+                                    if fetchone
+                                    else cursor.fetchall()
+                                )
+                                # Verificar si hay valores datetime o time en queryRes y serializarlos
+                                queryRes = [
+                                    self.serialize_datetime(item)
+                                    if isinstance(item, (datetime.datetime, datetime.time))
+                                    else [
+                                        self.serialize_datetime(sub_item)
+                                        if isinstance(
+                                            sub_item, (datetime.datetime, datetime.time)
+                                        )
+                                        else sub_item
+                                        for sub_item in item
+                                    ]
+                                    if self.is_non_string_iterable(item)
+                                    else item
+                                    for item in queryRes
+                                ]
+                            else:
+                                queryRes = cursor.lastrowid if cursor.lastrowid else 0
+                            conn.commit()
+                            cursor.close()
+                            return queryRes
+                        except Exception as e:
+                            print("Error al ejecutar la query: " + query)
+                            print(e)
+                            conn.rollback()
+                            cursor.close()
+                            raise e
+                else:
+                    print("Error al ejecutar la query: " + query)
+                    print(e)
+                    conn.rollback()
+                    cursor.close()
                     raise e
-            else:
-                print("Error al ejecutar las queries")
-                print(e)
-                self.conn.rollback()
-                raise e
-    
+
     #Consigue a los usuarios dentro de las clases
     def get_user_clases(self, user_id, user_role=None):
         if user_role in ["Dueño", "Admin", "Mod"]:
@@ -311,13 +250,13 @@ class DatabaseManager:
         if allStudents:
             query = "SELECT * FROM Estudiantes"
             params = None
-        elif student_id:
+        elif student_id is not None and student_id is not False:
             query = "SELECT * FROM Estudiantes WHERE AzureB2C_ID = %s"
             params = (student_id,)
-        elif class_id and course_id:
+        elif class_id is not None and course_id is not None:
             query = "SELECT E.* FROM Estudiantes E INNER JOIN Inscripciones I ON E.EstudianteID = I.EstudianteID INNER JOIN Clases C ON I.ClaseID = C.ClaseID INNER JOIN Cursos CR ON C.CursoID = CR.CursoID WHERE C.Nombre = %s AND CR.Nombre = %s"
             params = (class_id, course_id)
-        elif course_id:
+        elif course_id is not None:
             query = "SELECT E.* FROM Estudiantes E INNER JOIN Inscripciones I ON E.EstudianteID = I.EstudianteID INNER JOIN Clases C ON I.ClaseID = C.ClaseID INNER JOIN Cursos CR ON C.CursoID = CR.CursoID WHERE CR.Nombre = %s"
             params = (course_id,)
         else:
@@ -332,39 +271,22 @@ class DatabaseManager:
             raise e
         
     def get_asistencia_por_clase(self, clase_id):
-        query = """SELECT 
-            a.*,
-            e.Nombre AS NombreEstudiante,
-            e.Apellido AS ApellidoEstudiante
-        FROM 
-            face_n_lean.dbo.Asistencia a
-        INNER JOIN 
-            face_n_lean.dbo.Estudiantes e ON a.EstudianteID = e.EstudianteID
-        WHERE 
-            a.ClaseID = %s"""
-        params = (clase_id,)
+        query = "SELECT a.*, e.Nombre AS NombreEstudiante, e.Apellido AS ApellidoEstudiante FROM face_n_lean.dbo.Asistencia a INNER JOIN face_n_lean.dbo.Estudiantes e ON a.EstudianteID = e.EstudianteID WHERE a.ClaseID = %s"
+        params = (clase_id)
 
         try:
-            return self.execute_query(query, params=params, fetchone=False)
+            return self.execute_query(query, params=params)
         except Exception as e:
             raise e
 
     #Consigue la participacion de la clase
     def get_participacion_por_clase(self, clase_id):
-        query = """SELECT 
-            p.*,
-            e.Nombre AS NombreEstudiante,
-            e.Apellido AS ApellidoEstudiante
-        FROM 
-            face_n_lean.dbo.Participacion p
-        INNER JOIN 
-            face_n_lean.dbo.Estudiantes e ON p.EstudianteID = e.EstudianteID
-        WHERE 
-            p.ClaseID = %s"""
-        params = (clase_id,)
+        query = "SELECT p.*, e.Nombre AS NombreEstudiante, e.Apellido AS ApellidoEstudiante FROM face_n_lean.dbo.Participacion p INNER JOIN face_n_lean.dbo.Estudiantes e ON p.EstudianteID = e.EstudianteID WHERE p.ClaseID = %s"
+
+        params = (clase_id)
 
         try:
-            return self.execute_query(query, params=params, fetchone=False)
+            return self.execute_query(query, params=params)
         except Exception as e:
             raise e
 
@@ -397,12 +319,7 @@ class DatabaseManager:
 
     #Consigue a los profesores auxiliares
     def get_aux_profesores_clases(self):
-        query = """
-            SELECT P.*, C.ClaseID 
-            FROM Profesores P 
-            INNER JOIN CursoProfesores CP ON P.ProfesorID = CP.ProfesorID 
-            INNER JOIN Clases C ON CP.ClaseID = C.ClaseID
-        """
+        query = "SELECT P.*, C.ClaseID FROM Profesores P INNER JOIN CursoProfesores CP ON P.ProfesorID = CP.ProfesorID INNER JOIN Clases C ON CP.ClaseID = C.ClaseID"
         try:
             return self.execute_query(query)
         except Exception as e:
@@ -463,8 +380,8 @@ class DatabaseManager:
                     user_role,
                 )
             try:
-                self.execute_query(query, params)
-                return self.cursor.lastrowid
+                
+                return self.execute_query(query, params)
             except Exception as e:
                 raise e
         else:
@@ -582,5 +499,28 @@ class DatabaseManager:
         
         try:
             self.execute_query(query, params)
+        except Exception as e:
+            raise e
+
+
+    def calcular_asistencia_total(self, clase_id):
+        query = "SELECT COUNT(*) AS TotalAsistencia FROM face_n_lean.dbo.Inscripciones i INNER JOIN face_n_lean.dbo.Asistencia a ON i.EstudianteID = a.EstudianteID WHERE i.ClaseID = %s"
+
+        params = (clase_id)
+        
+        try:
+            result = self.execute_query(query, params=params, fetchone=True)
+            total_asistencia = result[0]
+            return total_asistencia
+        except Exception as e:
+            raise e
+
+    def get_numero_alumnos(self, clase_id):
+        query = "SELECT COUNT(*) as NumeroDeAlumnos FROM face_n_lean.dbo.Inscripciones WHERE ClaseID = %s"
+        params = (clase_id)
+        try:
+            result = self.execute_query(query, params=params, fetchone=True)
+            numero_alumnos = result[0]
+            return numero_alumnos
         except Exception as e:
             raise e

@@ -180,7 +180,50 @@ def receive_fps_ml():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#Esta consulta está diseñada para contar cuántas veces los estudiantes inscritos en la clase con ClaseID han asistido a sus clases.
+@app.route("/calcular_asistencia_total", methods=["POST"])
+def calcular_asistencia_total():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        total_asistencia = db_manager.calcular_asistencia_total(clase_id)
+        return jsonify({"total_asistencia": total_asistencia}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get_asistencia_por_clase", methods=["POST"])
+def get_asistencia_por_clase():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        asistencia = db_manager.get_asistencia_por_clase(clase_id)
+        return jsonify(asistencia), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get_participacion_por_clase", methods=["POST"])
+def get_participacion_por_clase():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        participacion = db_manager.get_participacion_por_clase(clase_id)
+        return jsonify(participacion), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+#Número de alumnos inscritos en una clase específica
+@app.route("/get_numero_alumnos", methods=["POST"])
+def get_numero_alumnos():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        numero_alumnos = db_manager.get_numero_alumnos(clase_id)
+        return jsonify({"numero_alumnos": numero_alumnos}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)   
