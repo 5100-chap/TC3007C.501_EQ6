@@ -14,83 +14,54 @@ import {
 import { API_BASE_URL } from "config/apiConfig";
 import axios from "axios";
 import jwt from "jwt-decode";
+import { useCallback, useMemo } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const gridSpacing = 8;
 const RegistroCara = () => {
-    const initialState = [
-        { id: -1, nombre: "", apellido: "", email: "", oid: "", matricula: "", fotoRostro: '' },
-    ];
+    const initialState = useMemo(() => [
+        { id: -1, nombre: "", apellido: "", email: "", oid: "", matricula: "", fotoRostro: '' }
+    ], []); // Empty dependency array means this runs once on component mount
+    
     const [userRole, setUserRole] = useState("");
     const [alumnos, setAlumnos] = useState(initialState);
     const [selectedAlumno, setSelectedAlumno] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [fotoRostro, setFotoRostro] = useState(null);
 
-    const fetchAlumnos = async () => {
+    const fetchAlumnos = useCallback(async () => {
         setAlumnos(initialState);
         const decodedJwt = jwt(localStorage.getItem("jwt"));
         setUserRole(decodedJwt.user_role);
         const userRole = decodedJwt.user_role;
-        if (
-            userRole === "Admin" ||
-            userRole === "Mod" ||
-            userRole === "Dueño" ||
-            userRole === "Profesor"
-        ) {
-            try {
-                const response = await axios.post(
-                    `${API_BASE_URL}/obtain_students_info`,
-                    {
-                        type: "AllStudentRequest",
-                    }
-                );
-                const data = response.data;
-                // Transformar datos a un formato adecuado para DataGrid
-                const alumnosTransformados = data.map((alumno) => ({
-                    id: alumno[0],
-                    nombre: alumno[1],
-                    apellido: alumno[2],
-                    email: alumno[3],
-                    oid: alumno[4],
-                    matricula: alumno[5],
-                    fotoRostro: alumno[6], // Agregar más campos si necesario
-                }));
-                setAlumnos(alumnosTransformados);
-                
-            } catch (error) {
-                console.error(error);
-            }
-        } else if (userRole === "Alumno") {
-            try {
-                const response = await axios.post(
-                    `${API_BASE_URL}/obtain_students_info`,
-                    {
-                        type: "Other",
-                        oid: decodedJwt.oid,
-                        Clase: 'None',
-                        Curso: 'None'
-                    }
-                );
-                const data = response.data;
-                // Transformar datos a un formato adecuado para DataGrid
-                const alumnosTransformados = data.map((alumno) => ({
-                    id: alumno[0],
-                    nombre: alumno[1],
-                    apellido: alumno[2],
-                    email: alumno[3],
-                    oid: alumno[4],
-                    matricula: alumno[5],
-                    fotoRostro: alumno[6], // Agregar más campos si necesario
-                }));
-                setAlumnos(alumnosTransformados);
-            } catch (error) {
-                console.error(error);
-            }
+    
+        try {
+            const response = await axios.post(
+                `${API_BASE_URL}/obtain_students_info`,
+                {
+                    type: userRole === "Alumno" ? "Other" : "AllStudentRequest",
+                    oid: userRole === "Alumno" ? decodedJwt.oid : undefined,
+                    Clase: userRole === "Alumno" ? 'None' : undefined,
+                    Curso: userRole === "Alumno" ? 'None' : undefined
+                }
+            );
+            const data = response.data;
+            const alumnosTransformados = data.map((alumno) => ({
+                id: alumno[0],
+                nombre: alumno[1],
+                apellido: alumno[2],
+                email: alumno[3],
+                oid: alumno[4],
+                matricula: alumno[5],
+                fotoRostro: alumno[6],
+            }));
+            setAlumnos(alumnosTransformados);
+        } catch (error) {
+            console.error(error);
         }
-    };
-
+    }, [initialState]); // Include other dependencies if they exist
+    
     useEffect(() => {
         // Obtener el rol del usuario almacenado en el JWT en el localStorage
         const role = localStorage.getItem("userRole");
@@ -100,7 +71,7 @@ const RegistroCara = () => {
     useEffect(() => {
         // Obtener la lista de alumnos
         fetchAlumnos();
-    }, []);
+    }, [fetchAlumnos]);
 
     const handleAlumnoSelection = (alumno) => {
         setSelectedAlumno(alumno);

@@ -8,22 +8,16 @@ import { useTheme } from '@mui/material/styles';
 import {
   Avatar,
   Box,
-  // Card,
-  // CardContent,
   Chip,
   ClickAwayListener,
   Divider,
-  Grid,
-  InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  OutlinedInput,
   Paper,
   Popper,
   Stack,
-  // Switch,
   Typography
 } from '@mui/material';
 
@@ -37,7 +31,7 @@ import Transitions from 'ui-component/extended/Transitions';
 import User1 from 'assets/images/users/user-round.svg';
 
 // assets
-import { IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons';
+import { IconLogout, IconSettings } from '@tabler/icons';
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -47,11 +41,11 @@ const ProfileSection = () => {
   const customization = useSelector((state) => state.customization);
   const navigate = useNavigate();
 
-  const [value, setValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState({});
 
+  setSelectedIndex(-4);
   const anchorRef = useRef(null);
   const handleLogout = async () => {
     localStorage.removeItem('jwt');
@@ -65,14 +59,6 @@ const ProfileSection = () => {
     setOpen(false);
   };
 
-  const handleListItemClick = (event, index, route = '') => {
-    setSelectedIndex(index);
-    handleClose(event);
-
-    if (route && route !== '') {
-      navigate(route);
-    }
-  };
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -86,21 +72,6 @@ const ProfileSection = () => {
     prevOpen.current = open;
   }, [open]);
 
-  const handleAddProfile = () => {
-    const jwt = localStorage.getItem('jwt');
-    if (jwt) {
-      const [, payload] = jwt.split('.');
-      const decodedPayload = JSON.parse(Buffer.toString(payload));
-      const userRole = decodedPayload.user_role;
-      if (userRole === 'Admin' || userRole === 'Mod' || userRole === 'Dueño') {
-        // Aquí puedes abrir un diálogo o navegar a una nueva página para agregar un nuevo perfil
-        // Luego, al guardar los cambios, puedes actualizar los datos de los perfiles en el estado del componente y en el backend
-        console.log('Agregar perfil');
-      }
-    }
-  };
-  
-
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
     if (jwt) {
@@ -109,13 +80,6 @@ const ProfileSection = () => {
       setUser({ name: decodedPayload.given_name + " " + decodedPayload.family_name, role: decodedPayload.user_role });
     }
   }, []);
-
-  const handleEditProfile = () => {
-    // Aquí puedes abrir un diálogo o navegar a una nueva página para editar los datos del usuario
-    // Luego, al guardar los cambios, puedes actualizar los datos del usuario en el estado del componente y en el backend
-    console.log('Editar perfil');
-  };
-
   return (
     <>
       <Chip

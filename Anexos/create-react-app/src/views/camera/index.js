@@ -14,7 +14,6 @@ import jwt from "jwt-decode";
 
 const Camera = ({ apiURL }) => {
 	const webcamRef = useRef(null);
-	const [imageSrc, setImageSrc] = useState(null);
 	const [processedImage, setProcessedImage] = useState(null);
 	const [courses, setCourses] = useState([]);
 	const [selectedCourse, setSelectedCourse] = useState("");
@@ -51,7 +50,7 @@ const Camera = ({ apiURL }) => {
 
 		fetchCourses();
 		console.log(courses);
-	}, []);
+	}, [courses]);
 
 	useEffect(() => {
 		// Verificar si un curso está seleccionado
@@ -68,12 +67,22 @@ const Camera = ({ apiURL }) => {
 	};
 
 	useEffect(() => {
+		const sendImageToAPI = (imageSrc, typeRequest = false) => {
+			axios.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse, type_request: typeRequest })
+				.then(response => {
+					setProcessedImage(`data:image/jpeg;base64,${response.data.image}`);
+				})
+				.catch(error => {
+					console.error("Error al enviar la imagen", error);
+				});
+		};
+
 		let interval;
 		if (isVideoStreaming) {
 			interval = setInterval(() => {
 				const imageSrc = webcamRef.current.getScreenshot();
 				sendImageToAPI(imageSrc);
-			}, 800); // Captura cada ms
+			}, 800);
 		} else {
 			const imageSrc = webcamRef.current.getScreenshot();
 			sendImageToAPI(imageSrc, true);
@@ -84,21 +93,8 @@ const Camera = ({ apiURL }) => {
 				clearInterval(interval);
 			}
 		};
-	}, [isVideoStreaming]);
+	}, [isVideoStreaming, selectedCourse]); // sendImageToAPI is no longer a dependency
 
-	// Función para enviar la imagen capturada y el curso seleccionado a la API
-	const sendImageToAPI = (imageSrc, typeRequest = false) => {
-		axios
-			.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse, type_request: typeRequest })
-			.then((response) => {
-				// Manejo de la respuesta
-				setProcessedImage(`data:image/jpeg;base64,${response.data.image}`);
-			})
-			.catch((error) => {
-				// Manejo de errores
-				console.error("Error al enviar la imagen", error);
-			});
-	};
 
 	return (
 		<MainCard title="Cámara">

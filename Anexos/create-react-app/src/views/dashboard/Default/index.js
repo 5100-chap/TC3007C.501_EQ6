@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AddIcon from "@mui/icons-material/Add";
 // material-ui
 // project imports
@@ -7,25 +7,16 @@ import EarningCard from "./EarningCard";
 import TotalOrderLineChartCard from "./TotalOrderLineChartCard";
 //import TotalIncomeDarkCard from './TotalIncomeDarkCard';
 //import TotalIncomeLightCard from './TotalIncomeLightCard';
-import TotalGrowthBarChart from "./TotalGrowthBarChart";
 import { gridSpacing } from "store/constant";
-import { DataGrid } from "@mui/x-data-grid";
 import {
   Grid,
   TextField,
   MenuItem,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-import Lista from "./list";
 import axios from "axios";
 import jwt from "jwt-decode";
 import { API_BASE_URL } from "config/apiConfig";
@@ -53,6 +44,9 @@ const Dashboard = () => {
     setTotalAsistencia("Sin datos");
     setAsistenciaPorClase("Sin datos");
     setParticipacionPorClase("Sin datos");
+    console.log(asistenciaPorClase);
+    console.log(participacionPorClase);
+    console.log(numeroAlumnos);
   };
   useEffect(() => {
     const fetchCourses = async () => {
@@ -103,7 +97,7 @@ const Dashboard = () => {
 
 
     fetchCourses();
-  }, []);
+  }, [courses]);
 
   useEffect(() => {
     if (!numeroCurso) {
@@ -183,7 +177,7 @@ const Dashboard = () => {
     fetchTotalAsistencia();
   }, [numeroCurso]);
 
-  const [openDialog, setOpenDialog] = useState(false);
+ /* const [openDialog, setOpenDialog] = useState(false);
   const [openEdit, setopenEdit] = useState(false);
   const [openDelete, setopenDelete] = useState(false);
 
@@ -210,11 +204,11 @@ const Dashboard = () => {
   const handleDeleteClose = () => {
     setopenDelete(false);
   };
-
+*/
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
 
-  const obtainStudentsInfo = async () => {
+  const obtainStudentsInfo = useCallback(async () => {
     try {
       const token = jwt(localStorage.getItem("jwt"));
       var response
@@ -236,6 +230,7 @@ const Dashboard = () => {
       }
       console.log(courses.find(course => course.id === value)?.ClaseID);
       console.log(courses.find(course => course.id === value)?.CursoID);
+      
       const students = response.data;
       console.log(response.data);
       const columns = [
@@ -254,11 +249,13 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error al obtener la información de los estudiantes", error);
     }
-  };
+    console.log(rows);
+    console.log(columns)
+  }, [columns, rows, courses, user_role, value]);
 
   useEffect(() => {
     obtainStudentsInfo();
-  }, [value]);
+  }, [obtainStudentsInfo]);
   const status = transformedCourses.map((course) => ({
     value: course.id,
     label: course.name,
@@ -279,7 +276,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<EditIcon />}
               color="secondary"
-              onClick={handleEditOpen}
+              onClick={/*handleEditOpen*/ console.log('e')}
             >
               Editar
             </Button>
@@ -291,7 +288,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<DeleteIcon />}
               color="error"
-              onClick={handleDeleteOpen}
+              onClick={/*handleDeleteOpen*/ console.log('e')}
             >
               Eliminar
             </Button>
@@ -302,7 +299,7 @@ const Dashboard = () => {
               size="large"
               variant="contained"
               endIcon={<AddIcon />}
-              onClick={handleDialogOpen}
+      onClick={/*handleDialogOpen*/console.log('e')}
             >
               Nuevo Curso
             </Button>
@@ -318,7 +315,7 @@ const Dashboard = () => {
             variant="contained"
             endIcon={<EditIcon />}
             color="secondary"
-            onClick={handleEditOpen}
+            onClick={/*handleEditOpen*/ console.log('e')}
           >
             Editar
           </Button>
