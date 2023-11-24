@@ -13,7 +13,7 @@ import cv2
 
 # Variables globales
 url = "http://localhost:5000"
-fronturl = "https://facenlaernmvp.azurewebsites.net/"
+fronturl = "https://brave-water-0d91eec10.4.azurestaticapps.net/"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
