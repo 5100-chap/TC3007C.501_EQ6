@@ -17,6 +17,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: Anexos/create-react-app/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: npm install, build, and test in React app directory
         run: |
