@@ -13,7 +13,7 @@ import cv2
 
 # Variables globales
 url = "http://147.185.221.17:18205"
-fronturl = "http://fast-trainers.gl.at.ply.gg:31768"
+fronturl = "https://brave-water-0d91eec10.4.azurestaticapps.net"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 

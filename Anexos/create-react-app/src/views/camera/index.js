@@ -7,7 +7,7 @@ import VideoCallIcon from "@mui/icons-material/VideoCall";
 import Button from "@mui/material/Button";
 import Webcam from "react-webcam";
 import { API_BASE_URL } from "config/apiConfig";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import jwt from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
@@ -17,7 +17,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const Camera = ({ apiURL }) => {
 	const webcamRef = useRef(null);
-	const [imageSrc, setImageSrc] = useState(null);
 	const [processedImage, setProcessedImage] = useState(null);
 	const [courses, setCourses] = useState([]);
 	const [selectedCourse, setSelectedCourse] = useState("");
@@ -25,6 +24,32 @@ const Camera = ({ apiURL }) => {
 	const [isCourseSelected, setIsCourseSelected] = useState(false);
 	const [isVideoStreaming, setIsVideoStreaming] = useState(false);
 	const token = jwt(localStorage.getItem("jwt"));
+	// Función para enviar la imagen capturada y el curso seleccionado a la API
+	const sendImageToAPI = useCallback((imageSrc, typeRequest = false) => {
+		axios
+			.post(`${API_BASE_URL}/receive_fps_ml`, {
+				image: imageSrc,
+				course: selectedCourse,
+				type_request: typeRequest,
+				role: token.user_role,
+			})
+			.then((response) => {
+				// Manejo de la respuesta
+				setProcessedImage(
+					`data:image/jpeg;base64,${response.data.image}`
+				);
+				if (response.data.results.is_finished === true) {
+					const participants = 'y se han registrado '+ response.data.results.detected_participants + ' participaciones';
+					toast.success(`Se ha registrado ${response.data.results.detected_faces} nuevas asistencias ${token.user_role === 'Alumno' ? '' : participants}`, {
+						autoClose: 5000, // Cerrar el mensaje automáticamente después de 5 segundos
+					}); // Mostrar notificación de éxito);
+				}
+			})
+			.catch((error) => {
+				// Manejo de errores
+				console.error("Error al enviar la imagen", error);
+			});
+	}, [selectedCourse, token.user_role]);
 
 	useEffect(() => {
 		// Función para obtener los cursos de la API
@@ -89,34 +114,9 @@ const Camera = ({ apiURL }) => {
 				clearInterval(interval);
 			}
 		};
-	}, [isVideoStreaming]);
+	}, [isVideoStreaming, sendImageToAPI]);
 
-	// Función para enviar la imagen capturada y el curso seleccionado a la API
-	const sendImageToAPI = (imageSrc, typeRequest = false) => {
-		axios
-			.post(`${API_BASE_URL}/receive_fps_ml`, {
-				image: imageSrc,
-				course: selectedCourse,
-				type_request: typeRequest,
-				role: token.user_role,
-			})
-			.then((response) => {
-				// Manejo de la respuesta
-				setProcessedImage(
-					`data:image/jpeg;base64,${response.data.image}`
-				);
-				if (response.data.results.is_finished === true) {
-					const participants = 'y se han registrado '+ response.data.results.detected_participants + ' participaciones';
-					toast.success(`Se ha registrado ${response.data.results.detected_faces} nuevas asistencias ${token.user_role === 'Alumno' ? '' : participants}`, {
-						autoClose: 5000, // Cerrar el mensaje automáticamente después de 5 segundos
-					}); // Mostrar notificación de éxito);
-				}
-			})
-			.catch((error) => {
-				// Manejo de errores
-				console.error("Error al enviar la imagen", error);
-			});
-	};
+	
 
 	return (
 		<MainCard title="Cámara">

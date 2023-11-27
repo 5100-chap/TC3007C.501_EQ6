@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AddIcon from "@mui/icons-material/Add";
 // material-ui
 // project imports
@@ -13,11 +13,6 @@ import {
   TextField,
   MenuItem,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from "@mui/material";
 import VirtualizedList from "./list";
 
@@ -65,6 +60,9 @@ const Dashboard = () => {
     setTotalAsistencia("Sin datos");
     setAsistenciaPorClase("Sin datos");
     setParticipacionPorClase("Sin datos");
+    console.log(asistenciaPorClase);
+    console.log(participacionPorClase);
+    console.log(numeroAlumnos);
   };
   useEffect(() => {
     const fetchCourses = async () => {
@@ -115,7 +113,7 @@ const Dashboard = () => {
     };
 
     fetchCourses();
-  }, []);
+  }, [courses]);
 
   useEffect(() => {
     if (!numeroCurso) {
@@ -198,7 +196,12 @@ const Dashboard = () => {
     setSelectedCourse(foundCourse);
   }, [numeroCurso, courses]);
 
-  const [openDialog, setOpenDialog] = useState(false);
+  useEffect(() => {
+    const foundCourse = courses.find(course => course.id.toString() === numeroCurso);
+    setSelectedCourse(foundCourse);
+  }, [numeroCurso, courses]);
+
+  /* const [openDialog, setOpenDialog] = useState(false);
   const [openEdit, setopenEdit] = useState(false);
   const [openDelete, setopenDelete] = useState(false);
 
@@ -225,11 +228,11 @@ const Dashboard = () => {
   const handleDeleteClose = () => {
     setopenDelete(false);
   };
-
+*/
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
 
-  const obtainStudentsInfo = async () => {
+  const obtainStudentsInfo = useCallback(async () => {
     try {
       const token = jwt(localStorage.getItem("jwt"));
       var response;
@@ -267,11 +270,13 @@ const Dashboard = () => {
         error
       );
     }
-  };
+    console.log(rows);
+    console.log(columns)
+  }, [columns, rows, courses, user_role, value]);
 
   useEffect(() => {
     obtainStudentsInfo();
-  }, [value]);
+  }, [obtainStudentsInfo]);
   const status = transformedCourses.map((course) => ({
     value: course.id,
     label: course.name,
@@ -292,7 +297,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<EditIcon />}
               color="secondary"
-              onClick={handleEditOpen}
+              onClick={/*handleEditOpen*/ console.log('e')}
             >
               Editar
             </Button>
@@ -304,7 +309,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<DeleteIcon />}
               color="error"
-              onClick={handleDeleteOpen}
+              onClick={/*handleDeleteOpen*/ console.log('e')}
             >
               Eliminar
             </Button>
@@ -315,7 +320,7 @@ const Dashboard = () => {
               size="large"
               variant="contained"
               endIcon={<AddIcon />}
-              onClick={handleDialogOpen}
+      onClick={/*handleDialogOpen*/console.log('e')}
             >
               Nuevo Curso
             </Button>
@@ -331,7 +336,7 @@ const Dashboard = () => {
             variant="contained"
             endIcon={<EditIcon />}
             color="secondary"
-            onClick={handleEditOpen}
+            onClick={/*handleEditOpen*/ console.log('e')}
           >
             Editar
           </Button>
