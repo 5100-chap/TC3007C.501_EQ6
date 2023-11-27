@@ -6,6 +6,8 @@ import { useTheme } from '@mui/material/styles';
 import {
   Avatar,
   Box,
+  // Card,
+  // CardContent,
   Chip,
   ClickAwayListener,
   Divider,
@@ -16,6 +18,7 @@ import {
   Paper,
   Popper,
   Stack,
+  // Switch,
   Typography
 } from '@mui/material';
 import { API_BASE_URL } from 'config/apiConfig';
@@ -42,7 +45,6 @@ const ProfileSection = () => {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState({});
 
-  setSelectedIndex(-4);
   const anchorRef = useRef(null);
   const handleLogout = async () => {
     setSelectedIndex(4);
