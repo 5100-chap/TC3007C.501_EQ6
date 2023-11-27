@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import AddIcon from "@mui/icons-material/Add";
+import { useEffect, useState, useCallback, useMemo } from "react";
+//import AddIcon from "@mui/icons-material/Add";
 // material-ui
 // project imports
 import EarningCard from "./EarningCard";
@@ -12,12 +12,20 @@ import {
   Grid,
   TextField,
   MenuItem,
+  /*
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  */
 } from "@mui/material";
 import VirtualizedList from "./list";
-
+/*
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+*/
 import axios from "axios";
 import jwt from "jwt-decode";
 import { API_BASE_URL } from "config/apiConfig";
@@ -43,11 +51,7 @@ const Dashboard = () => {
   const token = jwt(localStorage.getItem("jwt"));
   const [barChartData, setBarChartData] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
-
-  useEffect(() => {
-    setBarChartData(processBarChartData());
-    setPieChartData(processPieChartData());
-  }, [asistenciaPorClase]);
+  const [mustUpdate, setMustUpdate] = useState(true);
 
 
   // Cambio en la función de actualización de valor
@@ -60,60 +64,58 @@ const Dashboard = () => {
     setTotalAsistencia("Sin datos");
     setAsistenciaPorClase("Sin datos");
     setParticipacionPorClase("Sin datos");
-    console.log(asistenciaPorClase);
-    console.log(participacionPorClase);
-    console.log(numeroAlumnos);
   };
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      // Decifrar el JWT almacenado en localStorage y obtener los valores necesarios
+      // Realizar la solicitud POST a la API para obtener los cursos
+      console.log(numeroAlumnos);
+      console.log(asistenciaPorClaseCount);
+      setUser_role(token.user_role);
+      const response = await axios.post(`${API_BASE_URL}/obtain_clases_info`, {
+        oid: token.oid,
+        user_role: token.user_role,
+      });
+      // Almacenar los cursos en el estado
+
+      const transformedCourses2 = response.data.map((courseArray) => ({
+        id: courseArray[0],
+        ClaseID: courseArray[0],
+        CursoID: courseArray[1],
+        Ubicacion: courseArray[2],
+        Nombre: courseArray[3],
+        FechaInicio: courseArray[4],
+        FechaFin: courseArray[5],
+        HoraInicio: courseArray[6],
+        HoraFin: courseArray[7],
+        ProfesorID: courseArray[8],
+        NombreCurso: courseArray[9],
+        NombreProfesor: courseArray[10],
+        ApellidoProfesor: courseArray[11],
+      }));
+      setCourses(transformedCourses2);
+      console.log(courses);
+      // Transformar los datos para que coincidan con la estructura esperada
+      const transformedCourses = response.data.map((courseArray) => ({
+        id: courseArray[0],
+        name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
+      }));
+      setNumeroCurso(courses[0]);
+      setTransformedCourses(transformedCourses);
+      console.log(transformedCourses);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener los cursos", error);
+    }
+  }, [asistenciaPorClaseCount, courses, numeroAlumnos, setCourses, setNumeroCurso, setTransformedCourses, setLoading, token]);
+
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        // Decifrar el JWT almacenado en localStorage y obtener los valores necesarios
-        // Realizar la solicitud POST a la API para obtener los cursos
-        setUser_role(token.user_role);
-        const response = await axios.post(
-          `${API_BASE_URL}/obtain_clases_info`,
-          {
-            oid: token.oid,
-            user_role: token.user_role,
-          }
-        );
-        // Almacenar los cursos en el estado
-
-        const transformedCourses2 = response.data.map(
-          (courseArray) => ({
-            id: courseArray[0],
-            ClaseID: courseArray[0],
-            CursoID: courseArray[1],
-            Ubicacion: courseArray[2],
-            Nombre: courseArray[3],
-            FechaInicio: courseArray[4],
-            FechaFin: courseArray[5],
-            HoraInicio: courseArray[6],
-            HoraFin: courseArray[7],
-            ProfesorID: courseArray[8],
-            NombreCurso: courseArray[9],
-            NombreProfesor: courseArray[10],
-            ApellidoProfesor: courseArray[11],
-          })
-        );
-        setCourses(transformedCourses2);
-        console.log(courses);
-        // Transformar los datos para que coincidan con la estructura esperada
-        const transformedCourses = response.data.map((courseArray) => ({
-          id: courseArray[0],
-          name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
-        }));
-        setNumeroCurso(courses[0]);
-        setTransformedCourses(transformedCourses);
-        console.log(transformedCourses);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error al obtener los cursos", error);
-      }
-    };
-
-    fetchCourses();
-  }, [courses]);
+    if (mustUpdate) {
+      fetchCourses();
+      setMustUpdate(false);
+    }
+  }, [fetchCourses, mustUpdate]);
 
   useEffect(() => {
     if (!numeroCurso) {
@@ -189,19 +191,14 @@ const Dashboard = () => {
     fetchParticipacionPorClase();
     fetchAsistenciaPorClase();
     fetchTotalAsistencia();
-  }, [numeroCurso]);
+  }, [numeroCurso, totalAsistencia]);
 
   useEffect(() => {
     const foundCourse = courses.find(course => course.id.toString() === numeroCurso);
     setSelectedCourse(foundCourse);
   }, [numeroCurso, courses]);
-
-  useEffect(() => {
-    const foundCourse = courses.find(course => course.id.toString() === numeroCurso);
-    setSelectedCourse(foundCourse);
-  }, [numeroCurso, courses]);
-
-  /* const [openDialog, setOpenDialog] = useState(false);
+/*
+  const [openDialog, setOpenDialog] = useState(false);
   const [openEdit, setopenEdit] = useState(false);
   const [openDelete, setopenDelete] = useState(false);
 
@@ -228,10 +225,10 @@ const Dashboard = () => {
   const handleDeleteClose = () => {
     setopenDelete(false);
   };
-*/
+
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
-
+*/
   const obtainStudentsInfo = useCallback(async () => {
     try {
       const token = jwt(localStorage.getItem("jwt"));
@@ -242,10 +239,8 @@ const Dashboard = () => {
           {
             type: "Courses",
             oid: token.oid,
-            Clase: courses.find((course) => course.id === value)
-              ?.Nombre,
-            Curso: courses.find((course) => course.id === value)
-              ?.NombreCurso,
+            Clase: courses.find((course) => course.id === value)?.Nombre,
+            Curso: courses.find((course) => course.id === value)?.NombreCurso,
           }
         );
       } else {
@@ -254,10 +249,8 @@ const Dashboard = () => {
           {
             type: "Courses",
             oid: false,
-            Clase: courses.find((course) => course.id === value)
-              ?.Nombre,
-            Curso: courses.find((course) => course.id === value)
-              ?.NombreCurso,
+            Clase: courses.find((course) => course.id === value)?.Nombre,
+            Curso: courses.find((course) => course.id === value)?.NombreCurso,
           }
         );
       }
@@ -270,18 +263,16 @@ const Dashboard = () => {
         error
       );
     }
-    console.log(rows);
-    console.log(columns)
-  }, [columns, rows, courses, user_role, value]);
+  }, [user_role, value, courses]);
 
   useEffect(() => {
     obtainStudentsInfo();
-  }, [obtainStudentsInfo]);
+  }, [value, obtainStudentsInfo]);
   const status = transformedCourses.map((course) => ({
     value: course.id,
     label: course.name,
   }));
-
+/*
   const userRoleButtons = () => {
     if (
       user_role === "Dueño" ||
@@ -297,7 +288,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<EditIcon />}
               color="secondary"
-              onClick={/*handleEditOpen*/ console.log('e')}
+              onClick={handleEditOpen}
             >
               Editar
             </Button>
@@ -309,7 +300,7 @@ const Dashboard = () => {
               variant="contained"
               endIcon={<DeleteIcon />}
               color="error"
-              onClick={/*handleDeleteOpen*/ console.log('e')}
+              onClick={handleDeleteOpen}
             >
               Eliminar
             </Button>
@@ -320,7 +311,7 @@ const Dashboard = () => {
               size="large"
               variant="contained"
               endIcon={<AddIcon />}
-      onClick={/*handleDialogOpen*/console.log('e')}
+              onClick={handleDialogOpen}
             >
               Nuevo Curso
             </Button>
@@ -336,7 +327,7 @@ const Dashboard = () => {
             variant="contained"
             endIcon={<EditIcon />}
             color="secondary"
-            onClick={/*handleEditOpen*/ console.log('e')}
+            onClick={handleEditOpen}
           >
             Editar
           </Button>
@@ -346,10 +337,12 @@ const Dashboard = () => {
       return null;
     }
   };
-
-  const pieChartColors = ["#8884d8", "#4997D0", "#ffc658", "#ff7f00", "#ff5500", "#006000", "#0090ff"];
-
-  const processBarChartData = () => {
+*/
+  const pieChartColors = useMemo(
+    () => ["#8884d8", "#4997D0", "#ffc658", "#ff7f00", "#ff5500", "#006000", "#0090ff"],
+    []
+  );
+  const processBarChartData = useCallback(() => {
     const today = new Date();
     const last7Days = new Set(); // Usar un Set para un acceso más eficiente
 
@@ -378,10 +371,9 @@ const Dashboard = () => {
       participaciones: dailyParticipations[date], // Número total de participaciones ese día
       color: pieChartColors[index % pieChartColors.length] // Asignar un color del arreglo
     }));
-  };
+  }, [asistenciaPorClase, pieChartColors]); 
 
-
-  const processPieChartData = () => {
+  const processPieChartData = useCallback(() => {
     const participationTypesCount = {}; // Almacenar el conteo de participaciones por tipo
 
     // Contar participaciones por tipo
@@ -398,13 +390,13 @@ const Dashboard = () => {
       value: participationTypesCount[tipo], // Número total de participaciones de ese tipo
       color: pieChartColors[index % pieChartColors.length] // Asignar un color del arreglo
     }));
-  };
+  }, [participacionPorClase, pieChartColors]);
 
 
   useEffect(() => {
     setBarChartData(processBarChartData());
     setPieChartData(processPieChartData());
-  }, [participacionPorClase]);
+  }, [participacionPorClase, processBarChartData, processPieChartData]);
 
   return (
     <Grid container spacing={gridSpacing}>
@@ -503,5 +495,4 @@ const Dashboard = () => {
 
 
 export default Dashboard;
-
 

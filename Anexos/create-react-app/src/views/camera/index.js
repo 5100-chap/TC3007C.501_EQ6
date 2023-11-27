@@ -23,6 +23,7 @@ const Camera = ({ apiURL }) => {
 	const [transformedCourse, setTransformedCourse] = useState([]);
 	const [isCourseSelected, setIsCourseSelected] = useState(false);
 	const [isVideoStreaming, setIsVideoStreaming] = useState(false);
+	const [mustUpdate, setMustUpdate] = useState(true);
 	const token = jwt(localStorage.getItem("jwt"));
 	// Función para enviar la imagen capturada y el curso seleccionado a la API
 	const sendImageToAPI = useCallback((imageSrc, typeRequest = false) => {
@@ -51,36 +52,37 @@ const Camera = ({ apiURL }) => {
 			});
 	}, [selectedCourse, token.user_role]);
 
+	const fetchCourses = useCallback(async () => {
+		try {
+			// Realizar la solicitud POST a la API para obtener los cursos
+			const response = await axios.post(
+				`${API_BASE_URL}/obtain_clases_info`,
+				{
+					oid: token.oid,
+					user_role: token.user_role,
+				}
+			);
+			// Almacenar los cursos en el estado
+			setCourses(response.data);
+			// Transformar los datos para que coincidan con la estructura esperada
+			const transformedCourses = response.data.map((courseArray) => ({
+				id: courseArray[0],
+				name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
+			}));
+			console.log(response.data);
+			console.log(transformedCourses);
+			setTransformedCourse(transformedCourses);
+		} catch (error) {
+			console.error("Error al obtener los cursos", error);
+		}
+	}, [token.oid, token.user_role]);
 	useEffect(() => {
-		// Función para obtener los cursos de la API
-		const fetchCourses = async () => {
-			try {
-				// Realizar la solicitud POST a la API para obtener los cursos
-				const response = await axios.post(
-					`${API_BASE_URL}/obtain_clases_info`,
-					{
-						oid: token.oid,
-						user_role: token.user_role,
-					}
-				);
-				// Almacenar los cursos en el estado
-				setCourses(response.data);
-				// Transformar los datos para que coincidan con la estructura esperada
-				const transformedCourses = response.data.map((courseArray) => ({
-					id: courseArray[0],
-					name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
-				}));
-				console.log(response.data);
-				console.log(transformedCourses);
-				setTransformedCourse(transformedCourses);
-			} catch (error) {
-				console.error("Error al obtener los cursos", error);
-			}
-		};
-
-		fetchCourses();
-		console.log(courses);
-	}, []);
+		if (mustUpdate) {
+			fetchCourses();
+			setMustUpdate(false);
+			console.log(courses);
+		}
+	}, [fetchCourses, mustUpdate, courses]);
 
 	useEffect(() => {
 		// Verificar si un curso está seleccionado
