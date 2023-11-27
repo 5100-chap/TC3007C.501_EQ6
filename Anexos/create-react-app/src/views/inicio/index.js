@@ -18,30 +18,31 @@ const Inicio = () => {
 			if (
 				userRole === "Admin" ||
 				userRole === "Mod" ||
-				userRole === "Dueño"
+				userRole === "Dueño" ||
+				userRole === "Profesor"
 			) {
 				setShowRegistro(!showRegistro);
 			}
 		}
 	};
 
-  const handlePhotoProfile = () => {
-    const jwt = localStorage.getItem("jwt");
-    if (jwt) {
-      const [, payload] = jwt.split(".");
-      const decodedPayload = JSON.parse(atob(payload));
-      const userRole = decodedPayload.user_role;
-    if (
-        userRole === "Admin" ||
-        userRole === "Mod" ||
-        userRole === "Dueño" ||
-        userRole === "Alumno" || 
-        userRole === "Profesor"
-      ) {
-        setShowRegistroCara(!showRegistroCara);
-      }
-    }
-  };
+	const handlePhotoProfile = () => {
+		const jwt = localStorage.getItem("jwt");
+		if (jwt) {
+			const [, payload] = jwt.split(".");
+			const decodedPayload = JSON.parse(atob(payload));
+			const userRole = decodedPayload.user_role;
+			if (
+				userRole === "Admin" ||
+				userRole === "Mod" ||
+				userRole === "Dueño" ||
+				userRole === "Alumno" ||
+				userRole === "Profesor"
+			) {
+				setShowRegistroCara(!showRegistroCara);
+			}
+		}
+	};
 
 
 	const jwt = localStorage.getItem("jwt");
@@ -64,17 +65,20 @@ const Inicio = () => {
 			return (
 				<MainCard title="Bienvenido Profesor">
 					<Typography variant="body2">
-						Lorem ipsum dolor sit amen, consenter nipissing eli, sed
-						do elusion tempos incident ut laborers et doolie magna
-						alissa. Ut enif ad minim venice, quin nostrum
-						exercitation illampu laborings nisi ut liquid ex ea
-						commons construal. Duos aube grue dolor in reprehended
-						in voltage veil esse colum doolie eu fujian bulla
-						parian. Exceptive sin ocean cuspidate non president,
-						sunk in culpa qui officiate descent molls anim id est
-						labours.
+						{showRegistro && <Register />}{" "}
+						{showRegistroCara && <RegistroCara />}{""}
 					</Typography>
-					{/* Aquí podrías mostrar los cursos del profesor */}
+					<Button variant="contained" onClick={handleAddProfile}>
+						{showRegistro
+							? "Ocultar registro"
+							: "Registrar usuario"}
+					</Button>
+					<>  </>
+					<Button variant="contained" onClick={handlePhotoProfile}>
+						{showRegistroCara
+							? "Ocultar registro de cara"
+							: "Registrar cara de usuario"}
+					</Button>
 				</MainCard>
 			);
 		} else if (
@@ -88,16 +92,15 @@ const Inicio = () => {
 						userRole === "Admin"
 							? "Bienvenido Administrador"
 							: userRole === "Mod"
-							? "Bienvenido Moderador"
-							: userRole === "Dueño"
-							? "Bienvenido Dueño"
-							: "Bienvenido"
+								? "Bienvenido Moderador"
+								: userRole === "Dueño"
+									? "Bienvenido Dueño"
+									: "Bienvenido"
 					}
 				>
 					<Typography variant="body2">
-						Buen dia estimado {decodedPayload.user_name}, aqui se
-						podra seleccionar la opcion de poder agregar un usuario
-						al sistema, ya sea profesor o alumno
+						Buen dia estimado {decodedPayload.given_name + ' ' + decodedPayload.family_name}, aqui se
+						podra seleccionar varias opciones acorde a lo que necesite:
 						{showRegistro && <Register />}{" "}
 						{showRegistroCara && <RegistroCara />}{""}
 					</Typography>
@@ -106,8 +109,8 @@ const Inicio = () => {
 							? "Ocultar registro"
 							: "Registrar usuario"}
 					</Button>
-          <>  </>
-          <Button variant="contained" onClick={handlePhotoProfile}>
+					<>  </>
+					<Button variant="contained" onClick={handlePhotoProfile}>
 						{showRegistroCara
 							? "Ocultar registro de cara"
 							: "Registrar cara de usuario"}
@@ -119,14 +122,8 @@ const Inicio = () => {
 		return (
 			<MainCard title="Bienvenido">
 				<Typography variant="body2">
-					Lorem ipsum dolor sit amen, consenter nipissing eli, sed do
-					elusion tempos incident ut laborers et doolie magna alissa.
-					Ut enif ad minim venice, quin nostrum exercitation illampu
-					laborings nisi ut liquid ex ea commons construal. Duos aube
-					grue dolor in reprehended in voltage veil esse colum doolie
-					eu fujian bulla parian. Exceptive sin ocean cuspidate non
-					president, sunk in culpa qui officiate descent molls anim id
-					est labours.
+					Esta es la pagina de face 'n learn, actualmente no cuenta con credenciales validas para acceder a la pagina, favor de ponerse en contacto con un administrador para que se pueda solucionar el problema.
+					De igual forma puede intentar volver a iniciar sesión de la pagina con las mismas credenciales o con otras que se le hayan proporcionado.
 				</Typography>
 				<Button
 					variant="contained"

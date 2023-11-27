@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-
-import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // material-ui
@@ -13,20 +11,17 @@ import {
   Chip,
   ClickAwayListener,
   Divider,
-  Grid,
-  InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  OutlinedInput,
   Paper,
   Popper,
   Stack,
   // Switch,
   Typography
 } from '@mui/material';
-
+import { API_BASE_URL } from 'config/apiConfig';
 // third-party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
@@ -37,7 +32,7 @@ import Transitions from 'ui-component/extended/Transitions';
 import User1 from 'assets/images/users/user-round.svg';
 
 // assets
-import { IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons';
+import { IconLogout,  IconSettings } from '@tabler/icons';
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -45,17 +40,25 @@ const ProfileSection = () => {
 
   const theme = useTheme();
   const customization = useSelector((state) => state.customization);
-  const navigate = useNavigate();
 
-  const [value, setValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState({});
 
   const anchorRef = useRef(null);
   const handleLogout = async () => {
+    setSelectedIndex(4);
     localStorage.removeItem('jwt');
-    navigate('/login');
+    try {
+      const response = await fetch(`${API_BASE_URL}/logout`);
+      if (!response.ok) {
+        throw new Error('No se pudo obtener la URL de autenticación');
+      }
+      const data = await response.json();
+      window.location.href = data.logout;  // Redirige al usuario a Azure AD
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   const handleClose = (event) => {
@@ -65,14 +68,6 @@ const ProfileSection = () => {
     setOpen(false);
   };
 
-  const handleListItemClick = (event, index, route = '') => {
-    setSelectedIndex(index);
-    handleClose(event);
-
-    if (route && route !== '') {
-      navigate(route);
-    }
-  };
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -86,20 +81,6 @@ const ProfileSection = () => {
     prevOpen.current = open;
   }, [open]);
 
-  const handleAddProfile = () => {
-    const jwt = localStorage.getItem('jwt');
-    if (jwt) {
-      const [, payload] = jwt.split('.');
-      const decodedPayload = JSON.parse(Buffer.toString(payload));
-      const userRole = decodedPayload.user_role;
-      if (userRole === 'Admin' || userRole === 'Mod' || userRole === 'Dueño') {
-        // Aquí puedes abrir un diálogo o navegar a una nueva página para agregar un nuevo perfil
-        // Luego, al guardar los cambios, puedes actualizar los datos de los perfiles en el estado del componente y en el backend
-        console.log('Agregar perfil');
-      }
-    }
-  };
-  
 
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
@@ -109,12 +90,6 @@ const ProfileSection = () => {
       setUser({ name: decodedPayload.given_name + " " + decodedPayload.family_name, role: decodedPayload.user_role });
     }
   }, []);
-
-  const handleEditProfile = () => {
-    // Aquí puedes abrir un diálogo o navegar a una nueva página para editar los datos del usuario
-    // Luego, al guardar los cambios, puedes actualizar los datos del usuario en el estado del componente y en el backend
-    console.log('Editar perfil');
-  };
 
   return (
     <>
@@ -193,22 +168,6 @@ const ProfileSection = () => {
                       </Stack>
                       <Typography variant="subtitle2">{user.role}</Typography>
                     </Stack>
-                    <OutlinedInput
-                      sx={{ width: '100%', pr: 1, pl: 2, my: 2 }}
-                      id="input-search-profile"
-                      value={value}
-                      onChange={(e) => setValue(e.target.value)}
-                      placeholder="Search profile options"
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <IconSearch stroke={1.5} size="1rem" color={theme.palette.grey[500]} />
-                        </InputAdornment>
-                      }
-                      aria-describedby="search-helper-text"
-                      inputProps={{
-                        'aria-label': 'weight'
-                      }}
-                    />
                     <Divider />
                   </Box>
                   <PerfectScrollbar style={{ height: '100%', maxHeight: 'calc(100vh - 250px)', overflowX: 'hidden' }}>
@@ -229,37 +188,6 @@ const ProfileSection = () => {
                           }
                         }}
                       >
-                        <ListItemButton
-                          sx={{ borderRadius: `${customization.borderRadius}px` }}
-                          selected={selectedIndex === 0}
-                          onClick={(event) => handleListItemClick(event, 0, '#')}
-                        >
-                          <ListItemIcon
-                            sx={{ borderRadius: `${customization.borderRadius}px` }}
-                            selected={selectedIndex === 1}
-                            onClick={handleEditProfile}>
-                            <IconSettings stroke={1.5} size="1.3rem" />
-                          </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Editar Perfil</Typography>} />
-                        </ListItemButton>
-                        <ListItemButton
-                          sx={{ borderRadius: `${customization.borderRadius}px` }}
-                          selected={selectedIndex === 1}
-                          onClick={handleAddProfile}
-                        >
-                          <ListItemIcon>
-                            <IconUser stroke={1.5} size="1.3rem" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={
-                              <Grid container spacing={1} justifyContent="space-between">
-                                <Grid item>
-                                  <Typography variant="body2">Agregar Perfil</Typography>
-                                </Grid>
-                              </Grid>
-                            }
-                          />
-                        </ListItemButton>
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 4}

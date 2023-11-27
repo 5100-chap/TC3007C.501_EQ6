@@ -9,11 +9,11 @@ from models.MLmodel import MLmodel
 import base64
 import numpy as np
 import cv2
-import os
+
 
 # Variables globales
-url = "http://localhost:5000"
-fronturl = "http://localhost:3000"
+url = "http://147.185.221.17:18205"
+fronturl = "http://fast-trainers.gl.at.ply.gg:31768"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
@@ -24,6 +24,7 @@ auth_manager = AuthManager(url, db_manager, fronturl)
 ml_model = MLmodel(db_manager)
 
 app.secret_key = FLASK_SECRET_KEY
+
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -140,7 +141,7 @@ def login_redirect():
 
 @app.route("/logout")
 def logout():
-    return auth_manager.logout()
+    return jsonify({"logout": auth_manager.logout()})
 
 
 @app.route("/receive_fps_ml", methods=["POST"])
@@ -148,6 +149,8 @@ def receive_fps_ml():
     data = request.json
     image_src = data.get("image")
     selected_course = data.get("course")
+    type_request = False or data.get("type_request")
+    role = data.get("role")
 
     try:
         # Decodificar la imagen base64 y convertirla en una matriz de imagen
@@ -156,32 +159,100 @@ def receive_fps_ml():
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # Guardar la imagen original temporalmente
-        #cv2.imwrite("temp_original.jpg", img)
-
-        # Procesar la imagen
-        processed_image, results = ml_model.process_image(img)
+        # cv2.imwrite("temp_original.jpg", img)
+        if type_request != False:
+            # Llamada para que suba todo a la base de datos
+            processed_image, results = ml_model.process_image(
+                img, role, True, selected_course
+            )
+        else:
+            # Procesar la imagen
+            processed_image, results = ml_model.process_image(
+                img, role
+            )
 
         # Guardar la imagen procesada temporalmente
-        #cv2.imwrite("temp_processed.jpg", processed_image)
+        # cv2.imwrite("temp_processed.jpg", processed_image)
 
         # Codificar la imagen procesada en base64 para la respuesta
-        _, buffer = cv2.imencode('.jpg', processed_image)
+        _, buffer = cv2.imencode(".jpg", processed_image)
         jpg_as_text = base64.b64encode(buffer).decode()
 
         # Eliminar las imágenes temporales
-        #os.remove("temp_original.jpg")
-        #os.remove("temp_processed.jpg")
+        # os.remove("temp_original.jpg")
+        # os.remove("temp_processed.jpg")
 
         return jsonify({"image": jpg_as_text, "results": results}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
+# Esta consulta está diseñada para contar cuántas veces los estudiantes inscritos en la clase con ClaseID han asistido a sus clases.
+@app.route("/calcular_asistencia_total", methods=["POST"])
+def calcular_asistencia_total():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        total_asistencia = db_manager.calcular_asistencia_total(clase_id)
+        return jsonify({"total_asistencia": total_asistencia}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get_asistencia_por_clase", methods=["POST"])
+def get_asistencia_por_clase():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        asistencia = db_manager.get_asistencia_por_clase(clase_id)
+        return jsonify(asistencia), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get_participacion_por_clase", methods=["POST"])
+def get_participacion_por_clase():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        participacion = db_manager.get_participacion_por_clase(clase_id)
+        return jsonify(participacion), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Número de alumnos inscritos en una clase específica
+@app.route("/get_numero_alumnos", methods=["POST"])
+def get_numero_alumnos():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        numero_alumnos = db_manager.get_numero_alumnos(clase_id)
+        return jsonify({"numero_alumnos": numero_alumnos}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/calcular_dias_habiles", methods=["POST"])
+def calcular_dias_habiles():
+    try:
+        data = request.json
+        clase_id = data.get("clase_id")
+        dias_habiles = db_manager.calcular_dias_habiles(clase_id)
+        return jsonify({"dias_habiles": dias_habiles}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/azure_login", methods=["POST"])
+def azure_login():
+    try:
+        data = request.json
+        jwt = data.get("jwt")
+        link = auth_manager.azure_function_login(jwt)
+        return jsonify({"message": link}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
-    # Importar el módulo necesario
-
-    # ...
-
-    

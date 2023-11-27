@@ -160,4 +160,10 @@ cython_debug/
 #.idea/
 
 node_modules/
+
+Anexos/backend/config/bak.zip
+Anexos/backend/models/faces
+
 .vscode/
+
+functions/

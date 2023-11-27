@@ -1,9 +1,10 @@
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { format, isToday } from 'date-fns';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
-import { Avatar, Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
+import { Avatar, Box, Grid, Menu, MenuItem, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -15,8 +16,40 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import GetAppTwoToneIcon from '@mui/icons-material/GetAppOutlined';
 import FileCopyTwoToneIcon from '@mui/icons-material/FileCopyOutlined';
-import PictureAsPdfTwoToneIcon from '@mui/icons-material/PictureAsPdfOutlined';
-import ArchiveTwoToneIcon from '@mui/icons-material/ArchiveOutlined';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+
+
+// Función auxiliar para exportar a CSV
+const exportToCSV = (data, filename = 'export.csv') => {
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  // Agregar los headers al csv
+  const headers = [
+    "ParticipacionID",
+    "EstudianteID",
+    "ClaseID",
+    "TipoParticipacion",
+    "Detalles",
+    "Timestamp",
+    "NombreEstudiante",
+    "ApellidoEstudiante"
+  ];
+  csvContent += headers.join(",") + "\n";
+
+  csvContent += data.map(e => e.join(",")).join("\n");
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link); // Necesario para FF
+
+  link.click(); // Iniciar descarga
+  document.body.removeChild(link); // Limpiar después de descargar
+};
+
 
 const CardWrapper = styled(MainCard)(({ theme }) => ({
   backgroundColor: theme.palette.secondary.dark,
@@ -56,10 +89,15 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
-const EarningCard = ({ isLoading }) => {
-  const theme = useTheme();
+const EarningCard = ({ isLoading, totalParticipacion }) => {
 
+
+
+  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
+  const [showTable, setShowTable] = useState(false);
+  const [isTodayView, setIsTodayView] = useState(true);
+  const isTotalParticipacionArray = Array.isArray(totalParticipacion);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -69,6 +107,29 @@ const EarningCard = ({ isLoading }) => {
     setAnchorEl(null);
   };
 
+  const toggleTable = () => {
+    setShowTable(!showTable);
+  };
+
+  const participacionesHoy = totalParticipacion === 'Sin datos' ? [] : totalParticipacion.filter((participacion) => {
+    const timestamp = new Date(participacion[5]);
+    return isToday(timestamp);
+  });
+
+  // Función para alternar entre vistas totales y de hoy
+  const toggleView = () => {
+    setIsTodayView(!isTodayView);
+    handleClose();
+  };
+
+  // Función para manejar la exportación a CSV
+  const handleExportCSV = () => {
+    const dataToExport = isTodayView ? participacionesHoy : totalParticipacion;
+    exportToCSV(dataToExport, 'participaciones.csv');
+    handleClose();
+  };
+
+  const dataToShow = isTodayView ? participacionesHoy : (isTotalParticipacionArray ? totalParticipacion : []);
   return (
     <>
       {isLoading ? (
@@ -81,6 +142,7 @@ const EarningCard = ({ isLoading }) => {
                 <Grid container justifyContent="space-between">
                   <Grid item>
                     <Avatar
+                      onClick={toggleTable}
                       variant="rounded"
                       sx={{
                         ...theme.typography.commonAvatar,
@@ -108,42 +170,87 @@ const EarningCard = ({ isLoading }) => {
                     >
                       <MoreHorizIcon fontSize="inherit" />
                     </Avatar>
-                    <Menu
-                      id="menu-earning-card"
-                      anchorEl={anchorEl}
-                      keepMounted
-                      open={Boolean(anchorEl)}
-                      onClose={handleClose}
-                      variant="selectedMenu"
-                      anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'right'
-                      }}
-                      transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right'
-                      }}
+                    <Dialog
+                      open={showTable}
+                      onClose={toggleTable}
+                      aria-labelledby="table-dialog-title"
+                      maxWidth="lg"
                     >
-                      <MenuItem onClick={handleClose}>
-                        <GetAppTwoToneIcon sx={{ mr: 1.75 }} /> Import Card
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <FileCopyTwoToneIcon sx={{ mr: 1.75 }} /> Copy Data
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <PictureAsPdfTwoToneIcon sx={{ mr: 1.75 }} /> Export
-                      </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        <ArchiveTwoToneIcon sx={{ mr: 1.75 }} /> Archive File
-                      </MenuItem>
-                    </Menu>
+                      <DialogTitle id="table-dialog-title">
+                        {isTodayView ? "Participaciones de Hoy" : "Todas las Participaciones"}
+                      </DialogTitle>
+                      <DialogContent>
+                        <TableContainer component={Paper}>
+                          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>ParticipacionID</TableCell>
+                                <TableCell>EstudianteID</TableCell>
+                                <TableCell>ClaseID</TableCell>
+                                <TableCell>TipoParticipacion</TableCell>
+                                <TableCell>Detalles</TableCell>
+                                <TableCell>Timestamp</TableCell>
+                                <TableCell>NombreEstudiante</TableCell>
+                                <TableCell>ApellidoEstudiante</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {dataToShow.map((row) => (
+                                <TableRow
+                                  key={row[0]}
+                                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                >
+                                  <TableCell component="th" scope="row">
+                                    {row[0]}
+                                  </TableCell>
+                                  <TableCell>{row[1]}</TableCell>
+                                  <TableCell>{row[2]}</TableCell>
+                                  <TableCell>{row[3]}</TableCell>
+                                  <TableCell>{row[4]}</TableCell>
+                                  <TableCell>{format(new Date(row[5]), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
+                                  <TableCell>{row[6]}</TableCell>
+                                  <TableCell>{row[7]}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </DialogContent>
+                    </Dialog>
+                    {totalParticipacion !== 'string' && (
+                      <Menu
+                        id="menu-earning-card"
+                        anchorEl={anchorEl}
+                        keepMounted
+                        open={Boolean(anchorEl)}
+                        onClose={handleClose}
+                        variant="selectedMenu"
+                        anchorOrigin={{
+                          vertical: 'bottom',
+                          horizontal: 'right'
+                        }}
+                        transformOrigin={{
+                          vertical: 'top',
+                          horizontal: 'right'
+                        }}
+                      >
+                        <MenuItem onClick={toggleView}>
+                          <FileCopyTwoToneIcon sx={{ mr: 1.75 }} />
+                          {isTodayView ? "Ver Participaciones Totales" : "Ver Participaciones de Hoy"}
+                        </MenuItem>
+                        <MenuItem onClick={handleExportCSV}>
+                          <GetAppTwoToneIcon sx={{ mr: 1.75 }} /> Exportar a CSV
+                        </MenuItem>
+                      </Menu>
+                    )}
                   </Grid>
                 </Grid>
               </Grid>
               <Grid item>
                 <Grid container alignItems="center">
-                  <Grid item>
-                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>24</Typography>
+                  <Grid item><Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>
+                    {dataToShow.length}
+                  </Typography>
                   </Grid>
                   <Grid item>
                     <Avatar
@@ -179,7 +286,8 @@ const EarningCard = ({ isLoading }) => {
 };
 
 EarningCard.propTypes = {
-  isLoading: PropTypes.bool
+  isLoading: PropTypes.bool,
+  totalParticipacion: PropTypes.arrayOf(PropTypes.array)
 };
 
 export default EarningCard;
