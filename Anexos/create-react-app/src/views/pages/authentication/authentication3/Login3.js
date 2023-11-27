@@ -31,7 +31,7 @@ const Login = () => {
 
 		if (jwt) {
 			localStorage.setItem("jwt", jwt);
-			navigate("/inicio");
+			navigate("inicio");
 		} else {
 			const storedJwt = localStorage.getItem("jwt");
 			if (storedJwt && !isJwtExpired(storedJwt)) {
