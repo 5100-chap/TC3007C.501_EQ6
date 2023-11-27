@@ -10,6 +10,9 @@ import { API_BASE_URL } from "config/apiConfig";
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import jwt from "jwt-decode";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // ==============================|| SAMPLE PAGE ||============================== //
 
 const Camera = ({ apiURL }) => {
@@ -21,13 +24,12 @@ const Camera = ({ apiURL }) => {
 	const [transformedCourse, setTransformedCourse] = useState([]);
 	const [isCourseSelected, setIsCourseSelected] = useState(false);
 	const [isVideoStreaming, setIsVideoStreaming] = useState(false);
+	const token = jwt(localStorage.getItem("jwt"));
 
 	useEffect(() => {
 		// Función para obtener los cursos de la API
 		const fetchCourses = async () => {
 			try {
-				// Decifrar el JWT almacenado en localStorage y obtener los valores necesarios
-				const token = jwt(localStorage.getItem("jwt"));
 				// Realizar la solicitud POST a la API para obtener los cursos
 				const response = await axios.post(
 					`${API_BASE_URL}/obtain_clases_info`,
@@ -43,6 +45,8 @@ const Camera = ({ apiURL }) => {
 					id: courseArray[0],
 					name: `${courseArray[3]} - ${courseArray[9]}`, // Por ejemplo, "grupo 1 - Ensayo profesional..."
 				}));
+				console.log(response.data);
+				console.log(transformedCourses);
 				setTransformedCourse(transformedCourses);
 			} catch (error) {
 				console.error("Error al obtener los cursos", error);
@@ -57,6 +61,7 @@ const Camera = ({ apiURL }) => {
 		// Verificar si un curso está seleccionado
 		if (selectedCourse !== "") {
 			setIsCourseSelected(true);
+			console.log(selectedCourse)
 		} else {
 			setIsCourseSelected(false);
 		}
@@ -89,10 +94,23 @@ const Camera = ({ apiURL }) => {
 	// Función para enviar la imagen capturada y el curso seleccionado a la API
 	const sendImageToAPI = (imageSrc, typeRequest = false) => {
 		axios
-			.post(`${API_BASE_URL}/receive_fps_ml`, { image: imageSrc, course: selectedCourse, type_request: typeRequest })
+			.post(`${API_BASE_URL}/receive_fps_ml`, {
+				image: imageSrc,
+				course: selectedCourse,
+				type_request: typeRequest,
+				role: token.user_role,
+			})
 			.then((response) => {
 				// Manejo de la respuesta
-				setProcessedImage(`data:image/jpeg;base64,${response.data.image}`);
+				setProcessedImage(
+					`data:image/jpeg;base64,${response.data.image}`
+				);
+				if (response.data.results.is_finished === true) {
+					const participants = 'y se han registrado '+ response.data.results.detected_participants + ' participaciones';
+					toast.success(`Se ha registrado ${response.data.results.detected_faces} nuevas asistencias ${token.user_role === 'Alumno' ? '' : participants}`, {
+						autoClose: 5000, // Cerrar el mensaje automáticamente después de 5 segundos
+					}); // Mostrar notificación de éxito);
+				}
 			})
 			.catch((error) => {
 				// Manejo de errores
@@ -103,6 +121,7 @@ const Camera = ({ apiURL }) => {
 	return (
 		<MainCard title="Cámara">
 			<Grid container spacing={2}>
+				
 				<Grid item lg={6} md={6} sm={6} xs={12}>
 					<Webcam
 						audio={false}
@@ -110,7 +129,9 @@ const Camera = ({ apiURL }) => {
 						screenshotFormat="image/jpeg"
 					/>
 					{/* Mostrar la imagen procesada */}
-					{processedImage && <img src={processedImage} alt="Processed" />}
+					{processedImage && (
+						<img src={processedImage} alt="Processed" />
+					)}
 				</Grid>
 				<Grid item lg={6} md={6} sm={6} xs={6}></Grid>
 				<Button
@@ -136,6 +157,7 @@ const Camera = ({ apiURL }) => {
 					))}
 				</Select>
 				{!isCourseSelected && <p>Favor de seleccionar un curso</p>}
+				<ToastContainer />{}
 			</Grid>
 		</MainCard>
 	);

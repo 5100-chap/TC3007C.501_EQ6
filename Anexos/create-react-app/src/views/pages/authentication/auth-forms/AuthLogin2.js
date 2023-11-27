@@ -1,5 +1,5 @@
 import React from 'react';
-import { API_BASE_URL } from 'config/apiConfig';
+import {LOGIN_BASE_URL } from 'config/apiConfig';
 import {
     Box,
     Button,
@@ -15,7 +15,7 @@ const AuthLogin = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/login`);
+            const response = await fetch(`${LOGIN_BASE_URL}/login`);
             if (!response.ok) {
                 throw new Error('No se pudo obtener la URL de autenticación');
             }

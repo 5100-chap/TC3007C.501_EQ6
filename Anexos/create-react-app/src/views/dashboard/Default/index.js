@@ -7,9 +7,7 @@ import EarningCard from "./EarningCard";
 import TotalOrderLineChartCard from "./TotalOrderLineChartCard";
 //import TotalIncomeDarkCard from './TotalIncomeDarkCard';
 //import TotalIncomeLightCard from './TotalIncomeLightCard';
-import TotalGrowthBarChart from "./TotalGrowthBarChart";
 import { gridSpacing } from "store/constant";
-import { DataGrid } from "@mui/x-data-grid";
 import {
   Grid,
   TextField,
@@ -21,34 +19,48 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
+import VirtualizedList from "./list";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-import Lista from "./list";
 import axios from "axios";
 import jwt from "jwt-decode";
 import { API_BASE_URL } from "config/apiConfig";
+import React from "react";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, LabelList, Legend } from "recharts";
 // ==============================|| DEFAULT DASHBOARD ||============================== //
-
 const Dashboard = () => {
   const [value, setValue] = useState(-1);
   const [isLoading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [transformedCourses, setTransformedCourses] = useState([]);
   const [user_role, setUser_role] = useState();
-  const [totalAsistencia, setTotalAsistencia] = useState("Sin datos");
+  const [totalAsistencia, setTotalAsistencia] = useState(["Sin datos"]);
   const [asistenciaPorClase, setAsistenciaPorClase] = useState("Sin datos");
-  const [participacionPorClase, setParticipacionPorClase] = useState("Sin datos");
+  const [participacionPorClase, setParticipacionPorClase] =
+    useState("Sin datos");
   const [numeroAlumnos, setNumeroAlumnos] = useState(0);
+  const [alumnos, setAlumnos] = useState([]);
   const [numeroCurso, setNumeroCurso] = useState();
-  const [asistenciaPorClaseCount, setAsistenciaPorClaseCount] = useState('Sin datos');
+  const [asistenciaPorClaseCount, setAsistenciaPorClaseCount] =
+    useState("Sin datos");
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const token = jwt(localStorage.getItem("jwt"));
+  const [barChartData, setBarChartData] = useState([]);
+  const [pieChartData, setPieChartData] = useState([]);
+
+  useEffect(() => {
+    setBarChartData(processBarChartData());
+    setPieChartData(processPieChartData());
+  }, [asistenciaPorClase]);
+
 
   // Cambio en la función de actualización de valor
   const handleChange = (event) => {
     const selectedCourseId = event.target.value;
     setValue(selectedCourseId);
     setNumeroCurso(selectedCourseId.toString()); // Actualizar el curso seleccionado
+
     // Restablecer los datos a "Sin datos" hasta que se carguen los nuevos
     setTotalAsistencia("Sin datos");
     setAsistenciaPorClase("Sin datos");
@@ -58,7 +70,6 @@ const Dashboard = () => {
     const fetchCourses = async () => {
       try {
         // Decifrar el JWT almacenado en localStorage y obtener los valores necesarios
-        const token = jwt(localStorage.getItem("jwt"));
         // Realizar la solicitud POST a la API para obtener los cursos
         setUser_role(token.user_role);
         const response = await axios.post(
@@ -70,21 +81,23 @@ const Dashboard = () => {
         );
         // Almacenar los cursos en el estado
 
-        const transformedCourses2 = response.data.map((courseArray) => ({
-          id: courseArray[0],
-          ClaseID: courseArray[0],
-          CursoID: courseArray[1],
-          Ubicacion: courseArray[2],
-          Nombre: courseArray[3],
-          FechaInicio: courseArray[4],
-          FechaFin: courseArray[5],
-          HoraInicio: courseArray[6],
-          HoraFin: courseArray[7],
-          ProfesorID: courseArray[8],
-          NombreCurso: courseArray[9],
-          NombreProfesor: courseArray[10],
-          ApellidoProfesor: courseArray[11],
-        }));
+        const transformedCourses2 = response.data.map(
+          (courseArray) => ({
+            id: courseArray[0],
+            ClaseID: courseArray[0],
+            CursoID: courseArray[1],
+            Ubicacion: courseArray[2],
+            Nombre: courseArray[3],
+            FechaInicio: courseArray[4],
+            FechaFin: courseArray[5],
+            HoraInicio: courseArray[6],
+            HoraFin: courseArray[7],
+            ProfesorID: courseArray[8],
+            NombreCurso: courseArray[9],
+            NombreProfesor: courseArray[10],
+            ApellidoProfesor: courseArray[11],
+          })
+        );
         setCourses(transformedCourses2);
         console.log(courses);
         // Transformar los datos para que coincidan con la estructura esperada
@@ -100,7 +113,6 @@ const Dashboard = () => {
         console.error("Error al obtener los cursos", error);
       }
     };
-
 
     fetchCourses();
   }, []);
@@ -118,6 +130,7 @@ const Dashboard = () => {
           }
         );
         setTotalAsistencia(response.data.total_asistencia);
+        console.log(totalAsistencia);
       } catch (error) {
         console.error("Error al obtener la asistencia total", error);
       }
@@ -132,9 +145,9 @@ const Dashboard = () => {
           }
         );
         const asistenciaPorClaseData = response.data;
-        const asistenciaPorClaseCount = asistenciaPorClaseData.length;
+        const asistenciaPorClaseCount1 = asistenciaPorClaseData.length;
         setAsistenciaPorClase(asistenciaPorClaseData);
-        setAsistenciaPorClaseCount(asistenciaPorClaseCount); // Guardar el conteo en una variable
+        setAsistenciaPorClaseCount(asistenciaPorClaseCount1); // Guardar el conteo en una variable
       } catch (error) {
         console.error(
           "Error al obtener la asistencia por clase",
@@ -175,13 +188,15 @@ const Dashboard = () => {
     };
 
     fetchNumeroAlumnos();
-
     fetchParticipacionPorClase();
-
     fetchAsistenciaPorClase();
-
     fetchTotalAsistencia();
   }, [numeroCurso]);
+
+  useEffect(() => {
+    const foundCourse = courses.find(course => course.id.toString() === numeroCurso);
+    setSelectedCourse(foundCourse);
+  }, [numeroCurso, courses]);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openEdit, setopenEdit] = useState(false);
@@ -217,42 +232,40 @@ const Dashboard = () => {
   const obtainStudentsInfo = async () => {
     try {
       const token = jwt(localStorage.getItem("jwt"));
-      var response
-      if (user_role === 'Alumno') {
-        response = await axios.post(`${API_BASE_URL}/obtain_students_info`, {
-          type: "Courses",
-          oid: token.oid,
-          Clase: courses.find(course => course.id === value)?.Nombre,
-          Curso: courses.find(course => course.id === value)?.NombreCurso,
-        });
+      var response;
+      if (user_role === "Alumno") {
+        response = await axios.post(
+          `${API_BASE_URL}/obtain_students_info`,
+          {
+            type: "Courses",
+            oid: token.oid,
+            Clase: courses.find((course) => course.id === value)
+              ?.Nombre,
+            Curso: courses.find((course) => course.id === value)
+              ?.NombreCurso,
+          }
+        );
+      } else {
+        response = await axios.post(
+          `${API_BASE_URL}/obtain_students_info`,
+          {
+            type: "Courses",
+            oid: false,
+            Clase: courses.find((course) => course.id === value)
+              ?.Nombre,
+            Curso: courses.find((course) => course.id === value)
+              ?.NombreCurso,
+          }
+        );
       }
-      else {
-        response = await axios.post(`${API_BASE_URL}/obtain_students_info`, {
-          type: "Courses",
-          oid: false,
-          Clase: courses.find(course => course.id === value)?.Nombre,
-          Curso: courses.find(course => course.id === value)?.NombreCurso,
-        });
-      }
-      console.log(courses.find(course => course.id === value)?.ClaseID);
-      console.log(courses.find(course => course.id === value)?.CursoID);
       const students = response.data;
-      console.log(response.data);
-      const columns = [
-        { field: "id", headerName: "Matricula", width: 130 },
-        { field: "firstName", headerName: "Nombre", width: 150 },
-        { field: "lastName", headerName: "Apellidos", width: 150 },
-      ];
-      const rows = students.map(student => ({
-        id: student.id,
-        lastName: student.lastName,
-        firstName: student.firstName,
-        participacion: student.participacion,
-      }));
-      setColumns(columns);
-      setRows(rows);
+      setAlumnos(students);
+      console.log(students);
     } catch (error) {
-      console.error("Error al obtener la información de los estudiantes", error);
+      console.error(
+        "Error al obtener la información de los estudiantes",
+        error
+      );
     }
   };
 
@@ -329,6 +342,65 @@ const Dashboard = () => {
     }
   };
 
+  const pieChartColors = ["#8884d8", "#4997D0", "#ffc658", "#ff7f00", "#ff5500", "#006000", "#0090ff"];
+
+  const processBarChartData = () => {
+    const today = new Date();
+    const last7Days = new Set(); // Usar un Set para un acceso más eficiente
+
+    // Crear un array con las fechas de los últimos 7 días
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      last7Days.add(date.toISOString().split('T')[0]);
+    }
+
+    const dailyParticipations = {}; // Para almacenar la cuenta de participaciones por día
+
+    // Contar participaciones por día
+    if (asistenciaPorClase !== 'Sin datos') {
+      asistenciaPorClase.forEach(data => {
+        const date = data[4].split('T')[0];
+        if (last7Days.has(date)) {
+          dailyParticipations[date] = (dailyParticipations[date] || 0) + 1;
+        }
+      });
+    }
+
+    // Crear el array de datos para el gráfico
+    return Object.keys(dailyParticipations).map((date, index) => ({
+      name: date, // Fecha de la participación
+      participaciones: dailyParticipations[date], // Número total de participaciones ese día
+      color: pieChartColors[index % pieChartColors.length] // Asignar un color del arreglo
+    }));
+  };
+
+
+  const processPieChartData = () => {
+    const participationTypesCount = {}; // Almacenar el conteo de participaciones por tipo
+
+    // Contar participaciones por tipo
+    if (participacionPorClase !== 'Sin datos') {
+      participacionPorClase.forEach(data => {
+        const tipo = data[3]; // Tipo de Participación
+        participationTypesCount[tipo] = (participationTypesCount[tipo] || 0) + 1;
+      });
+    }
+
+    // Convertir el objeto de conteo en un array para el gráfico
+    return Object.keys(participationTypesCount).map((tipo, index) => ({
+      name: tipo, // Tipo de participación
+      value: participationTypesCount[tipo], // Número total de participaciones de ese tipo
+      color: pieChartColors[index % pieChartColors.length] // Asignar un color del arreglo
+    }));
+  };
+
+
+  useEffect(() => {
+    setBarChartData(processBarChartData());
+    setPieChartData(processPieChartData());
+  }, [participacionPorClase]);
+
   return (
     <Grid container spacing={gridSpacing}>
       <Grid item xs={12}>
@@ -351,7 +423,7 @@ const Dashboard = () => {
               ))}
             </TextField>
           </Grid>
-          {userRoleButtons()}
+          {/*userRoleButtons()*/}
         </Grid>
       </Grid>
       <Grid item xs={12}>
@@ -359,30 +431,72 @@ const Dashboard = () => {
           <Grid item lg={6} md={6} sm={6} xs={12}>
             <EarningCard
               isLoading={isLoading}
-              totalAsistencia={totalAsistencia}
+              totalParticipacion={participacionPorClase}
             />
           </Grid>
           <Grid item lg={6} md={6} sm={6} xs={12}>
             <TotalOrderLineChartCard
               isLoading={isLoading}
-              asistenciaPorClase={asistenciaPorClaseCount}
+              asistenciaPorClase={asistenciaPorClase}
+              rol={user_role}
+              courses={selectedCourse ? [selectedCourse] : []}
             />
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={gridSpacing}>
-          <Grid item xs={12} md={7}>
-          </Grid>
-          <Grid item xs={12} md={5}>
+      {/* Nuevo Grid container para la lista y gráficos */}
+      <Grid container item xs={12} spacing={gridSpacing}>
 
+        {/* Grid item para la lista de estudiantes */}
+        <Grid item xs={12} md={7}>
+          <VirtualizedList data={alumnos} />
+        </Grid>
 
-            {/* <PopularCard isLoading={isLoading} /> */}
+        {/* Grid item para los gráficos */}
+        <Grid item xs={12} md={5}>
+          <Grid container spacing={gridSpacing}>
+
+            {/* Gráfico de barras */}
+            <Grid item xs={12}>
+              <BarChart width={300} height={300} data={barChartData}>
+                <Bar dataKey="participaciones" fill="#8884d8">
+                  <LabelList dataKey="name" position="top" /> {/* Etiquetas de datos */}
+                </Bar>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Legend /> {/* Leyenda */}
+              </BarChart>
+            </Grid>
+
+            {/* Gráfico de pastel */}
+            <Grid item xs={12}>
+              <PieChart width={300} height={350}>
+                <Pie
+                  dataKey="value"
+                  data={pieChartData}
+                  cx={200}
+                  cy={200}
+                  outerRadius={80}
+                  label
+                >
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={pieChartColors[index % pieChartColors.length]} />
+                  ))}
+                </Pie>
+                <Legend align="center" /> {/* Leyenda */}
+              </PieChart>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>
     </Grid>
+
+
   );
 };
 
+
+
 export default Dashboard;
+
+

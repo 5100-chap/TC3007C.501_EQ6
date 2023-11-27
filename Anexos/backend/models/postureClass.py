@@ -2,7 +2,6 @@ import cv2
 import mediapipe as mp
 import time
 
-
 class PostureClass:
     def __init__(self):
         self.mp_pose = mp.solutions.pose
