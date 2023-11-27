@@ -1,3 +1,4 @@
+
 ##### PRIMERA PARTE PARA LIMPIAR LAS IMAGENEES
 
 
@@ -25,7 +26,7 @@
 #           #cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 #           face = image[y:y + h, x:x + w]
 #           face = cv2.resize(face, (150, 150))
-#           cv2.imwrite("faces/" + str(count) + ".jpg", face)
+#           cv2.imwrite("faces/" + imageName, face)
 
 
 #### SEGUNDA PARTE RECONOCIMIENTO 
@@ -38,6 +39,7 @@ import face_recognition
 # Codificar los rostros extraidos
 imageFacesPath = "C:/Users/usuario/Documents/GitHub/hand-deteccion/faces"
 
+asistencia = []
 facesEncodings = []
 facesNames = []
 for file_name in os.listdir(imageFacesPath):
@@ -76,10 +78,14 @@ while True:
                index = result.index(True)
                name = facesNames[index]
                color = (125, 220, 0)
+               if name not in asistencia:
+                    asistencia.append(name)
+          
           else:
                name = "Desconocido"
                color = (50, 50, 255)
 
+          #print(asistencia)
           cv2.rectangle(frame, (x, y + h), (x + w, y + h + 30), color, -1)
           cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
           cv2.putText(frame, name, (x, y + h + 25), 2, 1, (255, 255, 255), 2, cv2.LINE_AA)
@@ -88,6 +94,7 @@ while True:
      k = cv2.waitKey(1) & 0xFF
      if k == 27:
           break
+
 
 cap.release()
 cv2.destroyAllWindows()

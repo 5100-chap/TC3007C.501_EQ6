@@ -160,9 +160,14 @@ cython_debug/
 #.idea/
 
 node_modules/
-.vscode/
+
 Anexos/backend/config/bak.zip
 Anexos/backend/models/faces
 Anexos/create-react-app/.deployment
 Anexos/create-react-app/package-lock.json
 Anexos/create-react-app/yarn.lock
+
+
+.vscode/
+
+functions/

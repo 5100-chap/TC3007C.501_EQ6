@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-
-import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // material-ui
@@ -8,6 +6,8 @@ import { useTheme } from '@mui/material/styles';
 import {
   Avatar,
   Box,
+  // Card,
+  // CardContent,
   Chip,
   ClickAwayListener,
   Divider,
@@ -18,9 +18,10 @@ import {
   Paper,
   Popper,
   Stack,
+  // Switch,
   Typography
 } from '@mui/material';
-
+import { API_BASE_URL } from 'config/apiConfig';
 // third-party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
@@ -31,7 +32,7 @@ import Transitions from 'ui-component/extended/Transitions';
 import User1 from 'assets/images/users/user-round.svg';
 
 // assets
-import { IconLogout, IconSettings } from '@tabler/icons';
+import { IconLogout,  IconSettings } from '@tabler/icons';
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -39,17 +40,25 @@ const ProfileSection = () => {
 
   const theme = useTheme();
   const customization = useSelector((state) => state.customization);
-  const navigate = useNavigate();
 
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState({});
 
-  setSelectedIndex(-4);
   const anchorRef = useRef(null);
   const handleLogout = async () => {
+    setSelectedIndex(4);
     localStorage.removeItem('jwt');
-    navigate('/login');
+    try {
+      const response = await fetch(`${API_BASE_URL}/logout`);
+      if (!response.ok) {
+        throw new Error('No se pudo obtener la URL de autenticación');
+      }
+      const data = await response.json();
+      window.location.href = data.logout;  // Redirige al usuario a Azure AD
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   const handleClose = (event) => {
@@ -72,6 +81,7 @@ const ProfileSection = () => {
     prevOpen.current = open;
   }, [open]);
 
+
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
     if (jwt) {
@@ -80,6 +90,7 @@ const ProfileSection = () => {
       setUser({ name: decodedPayload.given_name + " " + decodedPayload.family_name, role: decodedPayload.user_role });
     }
   }, []);
+
   return (
     <>
       <Chip

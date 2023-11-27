@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
-import { Avatar, Box, Button, Grid, Typography } from '@mui/material';
+import { Avatar, Box, Button, Grid, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
 
 // third-party
 import Chart from 'react-apexcharts';
@@ -18,6 +18,8 @@ import ChartDataYear from './chart-data/total-order-year-line-chart';
 // assets
 import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+
+import { API_BASE_URL } from 'config/apiConfig';
 
 const CardWrapper = styled(MainCard)(({ theme }) => ({
   backgroundColor: theme.palette.primary.dark,
@@ -63,13 +65,112 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 // ==============================|| DASHBOARD - TOTAL ORDER LINE CHART CARD ||============================== //
 
-const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase}) => {
+const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase, rol, courses }) => {
+  const isAsistenciaPorClaseArray = Array.isArray(asistenciaPorClase);
   const theme = useTheme();
-
+  const [idClase] = useState(isAsistenciaPorClaseArray ? courses[0].ClaseID : -1); // courses[0].ClaseID
   const [timeValue, setTimeValue] = useState(false);
+  const [totalAsistencias, setTotalAsistencias] = useState(0);
+  const [totalAsistenciasBase, setTotalAsistenciaBase] = useState(0);
+  const [promedio, setPromedio] = useState(null);
+  const [update, setUpdate] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+
   const handleChangeTime = (event, newValue) => {
     setTimeValue(newValue);
+    setUpdate(true);
   };
+
+  const handleExportCSV = () => {
+    const csvData = [];
+    const headers = ["AsistenciaID", "EstudianteID", "Clase", "Curso", "HoraEntrada", "HoraSalida", "NombreEstudiante", "ApellidoEstudiante"];
+
+    // Add headers to csvData
+    csvData.push(headers);
+
+    // Add data rows to csvData
+    asistenciaPorClase.forEach((asistencia) => {
+      // Asegúrate de que cada elemento de asistencia tiene los datos en el orden correcto
+      const row = [
+        asistencia[0], // AsistenciaID
+        asistencia[1], // EstudianteID
+        courses[0].Nombre, // Clase (asumiendo que es constante para todas las filas)
+        courses[0].NombreCurso, // Curso (asumiendo que es constante para todas las filas)
+        asistencia[3], // HoraEntrada
+        asistencia[4], // HoraSalida
+        asistencia[5], // NombreEstudiante
+        asistencia[6], // ApellidoEstudiante
+      ];
+      csvData.push(row);
+    });
+
+    // Convert csvData to CSV string
+    const csvString = csvData.map((row) => row.join(",")).join("\n");
+
+    // Create a temporary anchor element
+    const anchor = document.createElement("a");
+    anchor.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csvString);
+    anchor.download = "asistencia.csv";
+    anchor.click();
+  };
+
+
+  const toggleTable = () => {
+    setShowTable(!showTable);
+  };
+
+  useEffect(() => {
+    const calculateAsistencias = async () => {
+      if ((asistenciaPorClase === 'Sin datos') || !update) {
+        return;
+      }
+  
+      let totalAsistenciasDelDia = 0;
+      if (isAsistenciaPorClaseArray) {
+        const today = new Date().toISOString().split('T')[0];
+        const asistenciasHoy = asistenciaPorClase.filter(asistencia => asistencia[4].startsWith(today));
+        totalAsistenciasDelDia = asistenciasHoy.length;
+      }
+  
+      try {
+        const response = await axios.post(`${API_BASE_URL}/calcular_dias_habiles`, { clase_id: courses[0].id });
+        const diasHabiles = response.data.dias_habiles;
+  
+        setTotalAsistenciaBase(diasHabiles);
+  
+        if (!timeValue) {
+          // Modo "Hoy"
+          setTotalAsistencias(totalAsistenciasDelDia);
+        } else {
+          // Modo "Promedio"
+          if (rol !== 'Alumno') {
+            setTotalAsistencias(asistenciaPorClase.length);
+          } else {
+            setPromedio((asistenciaPorClase.length / diasHabiles).toFixed(2));
+            setTotalAsistencias(asistenciaPorClase.length);
+          }
+        }
+      } catch (error) {
+        console.error('Error al calcular días hábiles:', error);
+      }
+  
+      setUpdate(false);
+    };
+  
+    if (update || (asistenciaPorClase !== 'Sin datos' && isAsistenciaPorClaseArray)) {
+      calculateAsistencias();
+    }
+  
+  }, [update, asistenciaPorClase, courses, isAsistenciaPorClaseArray, timeValue, idClase, rol]);
+  
+  useEffect(() => {
+    if (typeof asistenciaPorClase === 'string') {
+      setTotalAsistencias(0);
+      setTotalAsistenciaBase(0);
+      setPromedio(null);
+      setUpdate(true);
+    }
+  }, [asistenciaPorClase]);
 
   return (
     <>
@@ -82,18 +183,62 @@ const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase}) => {
               <Grid item>
                 <Grid container justifyContent="space-between">
                   <Grid item>
-                    <Avatar
-                      variant="rounded"
-                      sx={{
-                        ...theme.typography.commonAvatar,
-                        ...theme.typography.largeAvatar,
-                        backgroundColor: theme.palette.primary[800],
-                        color: '#fff',
-                        mt: 1
-                      }}
-                    >
-                      <LocalMallOutlinedIcon fontSize="inherit" />
-                    </Avatar>
+                    {showTable ? (
+                      <Dialog
+                        open={showTable}
+                        onClose={toggleTable}
+                        aria-labelledby="table-dialog-title"
+                        maxWidth="lg"
+                      >
+                        <DialogTitle id="table-dialog-title">
+                        </DialogTitle>
+                        <DialogContent>
+                          <TableContainer component={Paper}>
+                            <Table>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>AsistenciaID</TableCell>
+                                  <TableCell>EstudianteID</TableCell>
+                                  <TableCell>Clase</TableCell>
+                                  <TableCell>Curso</TableCell>
+                                  <TableCell>HoraEntrada</TableCell>
+                                  <TableCell>HoraSalida</TableCell>
+                                  <TableCell>NombreEstudiante</TableCell>
+                                  <TableCell>ApellidoEstudiante</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {isAsistenciaPorClaseArray && asistenciaPorClase.map((asistencia, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{asistencia[0]}</TableCell>
+                                    <TableCell>{asistencia[1]}</TableCell>
+                                    <TableCell>{courses[0].Nombre}</TableCell>
+                                    <TableCell>{courses[0].NombreCurso}</TableCell>
+                                    <TableCell>{asistencia[3]}</TableCell>
+                                    <TableCell>{asistencia[4]}</TableCell>
+                                    <TableCell>{asistencia[5]}</TableCell>
+                                    <TableCell>{asistencia[6]}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </DialogContent>
+                      </Dialog>
+                    ) : (
+                      <Avatar
+                        variant="rounded"
+                        sx={{
+                          ...theme.typography.commonAvatar,
+                          ...theme.typography.largeAvatar,
+                          backgroundColor: theme.palette.primary[800],
+                          color: '#fff',
+                          mt: 1
+                        }}
+                      >
+                        <LocalMallOutlinedIcon fontSize="inherit" />
+                      </Avatar>
+                    )}
                   </Grid>
                   <Grid item>
                     <Button
@@ -103,7 +248,7 @@ const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase}) => {
                       sx={{ color: 'inherit' }}
                       onClick={(e) => handleChangeTime(e, true)}
                     >
-                      Hoy
+                      {rol === 'Alumno' ? 'Promedio' : 'Total'}
                     </Button>
                     <Button
                       disableElevation
@@ -112,7 +257,27 @@ const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase}) => {
                       sx={{ color: 'inherit' }}
                       onClick={(e) => handleChangeTime(e, false)}
                     >
-                      Promedio
+                      Hoy
+                    </Button>
+                    <Button
+                      disableElevation
+                      variant="contained"
+                      size="small"
+                      sx={{ color: 'inherit' }}
+                      onClick={toggleTable}
+                      disabled={typeof asistenciaPorClase === 'string'}
+                    >
+                      Mostrar Tabla
+                    </Button>
+                    <Button
+                      disableElevation
+                      variant="contained"
+                      size="small"
+                      sx={{ color: 'inherit' }}
+                      onClick={handleExportCSV}
+                      disabled={typeof asistenciaPorClase === 'string'}
+                    >
+                      Exportar a CSV
                     </Button>
                   </Grid>
                 </Grid>
@@ -122,11 +287,9 @@ const TotalOrderLineChartCard = ({ isLoading, asistenciaPorClase}) => {
                   <Grid item xs={6}>
                     <Grid container alignItems="center">
                       <Grid item>
-                        {timeValue ? (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{asistenciaPorClase}</Typography>
-                        ) : (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{asistenciaPorClase}</Typography>
-                        )}
+                        <Typography>
+                          {timeValue ? (rol === 'Aluimno' ? `${totalAsistencias}/${totalAsistenciasBase} (${promedio}%)` : totalAsistencias) : totalAsistencias.toString()} asistencias
+                        </Typography>
                       </Grid>
                       <Grid item>
                         <Avatar
@@ -171,3 +334,5 @@ TotalOrderLineChartCard.propTypes = {
 };
 
 export default TotalOrderLineChartCard;
+
+

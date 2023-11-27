@@ -18,7 +18,8 @@ const Inicio = () => {
 			if (
 				userRole === "Admin" ||
 				userRole === "Mod" ||
-				userRole === "Dueño"
+				userRole === "Dueño" ||
+				userRole === "Profesor"
 			) {
 				setShowRegistro(!showRegistro);
 			}
@@ -64,8 +65,20 @@ const Inicio = () => {
 			return (
 				<MainCard title="Bienvenido Profesor">
 					<Typography variant="body2">
+						{showRegistro && <Register />}{" "}
+						{showRegistroCara && <RegistroCara />}{""}
 					</Typography>
-					{/* Aquí podrías mostrar los cursos del profesor */}
+					<Button variant="contained" onClick={handleAddProfile}>
+						{showRegistro
+							? "Ocultar registro"
+							: "Registrar usuario"}
+					</Button>
+					<>  </>
+					<Button variant="contained" onClick={handlePhotoProfile}>
+						{showRegistroCara
+							? "Ocultar registro de cara"
+							: "Registrar cara de usuario"}
+					</Button>
 				</MainCard>
 			);
 		} else if (

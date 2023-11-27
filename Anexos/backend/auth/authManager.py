@@ -17,6 +17,7 @@ class AuthManager:
         self.token_url = varConfig.token_endpoint_signin # Asegúrate de que esta es la URL correcta para obtener el token
         self.redirect_uri = url + "/login-redirect"  # Asegúrate de cambiar esto a tu URI de redirección registrada
         self.authority_url = varConfig.authorize_url_signin
+        self.logout_url = varConfig.logout_url_signin
         self.response_type = 'code'  # Tipo de respuesta esperada, en este caso un código de autorización
         self.db_manager = db_manager
         self.fronturl = fronturl
@@ -108,4 +109,16 @@ class AuthManager:
         # Método para cerrar la sesión del usuario
         session.pop('user_info', None)
         session.pop('state', None)
-        return redirect(url_for('index'))  # Redirige a la página de inicio de sesión o página principal
+        logout_url = f"{self.logout_url}?post_logout_redirect_uri={urllib.parse.quote(self.fronturl + '/login')}"
+        return logout_url
+    # Redirige a la página de inicio de sesión o página principal
+    
+    def azure_function_login(self, jwt2):
+        # Método para obtener la información del usuario
+        user_info = self.validate_token(jwt2)
+        if user_info:
+            encoded_jwt = jwt.encode(user_info, varConfig.FLASK_SECRET_KEY, algorithm='HS256')
+            link = f"{self.fronturl}/login?jwt={encoded_jwt}"
+            return link
+        else:
+            return "Error en la autenticación", 401

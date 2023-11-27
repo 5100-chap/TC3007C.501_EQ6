@@ -228,20 +228,22 @@ class DatabaseManager:
             user = self.execute_query(query, params=params, fetchone=True)
             if user is not None:
                 return user[0]
-            else:
+        except Exception as e:
+
+            try:
                 query = "SELECT * FROM Profesores WHERE AzureB2C_ID = %s"
                 user = self.execute_query(query, params=params, fetchone=True)
                 if user is not None:
                     return "Profesor"
-                else:
+            except Exception as e:
+
+                try:
                     query = "SELECT * FROM Estudiantes WHERE AzureB2C_ID = %s"
                     user = self.execute_query(query, params=params, fetchone=True)
                     if user is not None:
                         return "Alumno"
-                    else:
-                        raise Exception("Usuario no encontrado")
-        except Exception as e:
-            raise e
+                except Exception as e:
+                    raise Exception("Usuario no encontrado: " + e)
 
     #Consigue a los estudiantes
     def get_students(
@@ -349,7 +351,13 @@ class DatabaseManager:
         try:
             admin = self.execute_query(query, params=params, fetchone=True)
         except Exception as e:
-            raise e
+            try:
+                query = "SELECT * FROM Profesores WHERE AzureB2C_ID = %s"
+                admin = self.execute_query(query, params=params, fetchone=True)
+                if admin is not None and admin != 0:
+                    admin[5] = 'Profesor'
+            except Exception as e:
+                raise e
         if admin and self.can_register(admin[5], user_role):
             # Crear el nuevo usuario según el rol
             if user_role == "Estudiante" or user_role == "Alumno":
@@ -524,3 +532,58 @@ class DatabaseManager:
             return numero_alumnos
         except Exception as e:
             raise e
+        
+    def calcular_dias_habiles(self, clase_id):
+        # Obtener las fechas de inicio y fin de la clase
+        query_fechas = """SELECT 
+        FechaInicio, FechaFin FROM face_n_lean.dbo.Clases WHERE ClaseID = %s
+        """
+        # Obtener los días de la semana en los que se imparte la clase
+        query_dias = """SELECT 
+        DiaID FROM face_n_lean.dbo.ClaseDias WHERE ClaseID = %s
+        """
+
+        try:
+            fechas = self.execute_query(query_fechas, params=(clase_id,), fetchone=True)
+            dias_clase = self.execute_query(query_dias, params=(clase_id,))
+            
+            if not fechas or not dias_clase:
+                return 0
+
+            fecha_inicio, fecha_fin = fechas
+            dias_habiles = self.calcular_dias_entre_fechas(fecha_inicio, fecha_fin, [d[0] for d in dias_clase])
+            return dias_habiles
+        except Exception as e:
+            raise e
+
+    def calcular_dias_entre_fechas(self, fecha_inicio, fecha_fin, dias_semana):
+        """
+        Calcula el número de días hábiles entre dos fechas, incluyendo solo los días de la semana especificados.
+        :param fecha_inicio: Fecha de inicio (datetime)
+        :param fecha_fin: Fecha de fin (datetime)
+        :param dias_semana: Lista de enteros representando los días de la semana (1=lunes, 7=domingo)
+        :return: Número de días hábiles
+        """
+        
+        # Convertir las fechas de string a datetime
+        fecha_inicio = datetime.datetime.fromisoformat(fecha_inicio)
+        fecha_fin = datetime.datetime.fromisoformat(fecha_fin)
+
+        # Verificar que la fecha de inicio sea menor o igual a la fecha de fin
+        if fecha_inicio > fecha_fin:
+            raise ValueError("La fecha de inicio debe ser anterior o igual a la fecha de fin.")
+
+        # Contador de días hábiles
+        dias_habiles = 0
+
+        # Iterar sobre cada día entre las fechas
+        dia_actual = fecha_inicio
+        while dia_actual <= fecha_fin:
+            # Si el día de la semana del día actual está en los días hábiles, incrementar el contador
+            if dia_actual.isoweekday() in dias_semana:
+                dias_habiles += 1
+
+            # Avanzar al siguiente día
+            dia_actual += datetime.timedelta(days=1)
+
+        return dias_habiles
