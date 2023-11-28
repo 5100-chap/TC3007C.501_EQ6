@@ -1,4 +1,6 @@
-# Getting Started with Create React App
+# Frontend
+
+Este es el frontend del proyecto, se utilizo react y nodeJS para crear la interfaz reflejada en el reporte final
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
