@@ -1,6 +1,8 @@
 # TC3007C.501_EQ6
 Repositorio del equipo 6 para la materia de Inteligencia artificial avanzada para la ciencia de datos II (Gpo 501)
 
+El reporte final del proyecto se encuentra en [Reporte Final/Reporte_Final.pdf](./Reporte%20Final/Reporte_Final.pdf)
+
 ## Estructura del Repositorio 
 La carpeta principal de este repositorio contiene los siguientes archivos y carpetas:
 
@@ -12,6 +14,3 @@ La carpeta principal de este repositorio contiene los siguientes archivos y carp
    - [Avances Semanales](./Avances%20Semanales): Carpeta que contendrá los avances que hagamos cada semana desde el inicio del proyecto hasta su cierre.
    - [Planeación](./Planeación): En esta carpeta se podrá encontrar mayor información sobre cómo se planificó el reto.
    - [Anexos](./Anexos): Aquí se encuentran todos los códigos y algoritmos analizados y utilizados para completar el reto. Dentro de esta carpeta se encuentra el [Backend](./Anexos/backend/) bajo la carpeta del mismo nombre y la carpeta [create-react-app](./Anexos/create-react-app/) que es el frontend, ambas son las versiones finales usadas en este reto.
- 
-- Cambios Implementados
-    - 
