@@ -13,7 +13,7 @@ import cv2
 
 # Variables globales
 url = "http://147.185.221.17:18205"
-fronturl = "https://brave-water-0d91eec10.4.azurestaticapps.net"
+fronturl = "http://fast-trainers.gl.at.ply.gg:31768"
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
@@ -25,6 +25,8 @@ ml_model = MLmodel(db_manager)
 
 app.secret_key = FLASK_SECRET_KEY
 
+
+offline_mode = False
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -146,6 +148,21 @@ def logout():
 
 @app.route("/receive_fps_ml", methods=["POST"])
 def receive_fps_ml():
+    """
+    Endpoint para recibir una imagen y procesarla utilizando un modelo de machine learning.
+
+    Parámetros:
+    - image: str, imagen codificada en base64.
+    - course: str, curso seleccionado.
+    - type_request: bool, indica si se debe subir la imagen a la base de datos.
+    - role: str, rol del usuario.
+
+    Retorna:
+    - image: str, imagen procesada codificada en base64.
+    - results: dict, resultados del procesamiento de la imagen.
+
+    En caso de error, retorna un mensaje de error y un código de estado 500.
+    """
     data = request.json
     image_src = data.get("image")
     selected_course = data.get("course")
@@ -255,4 +272,7 @@ def azure_login():
     
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if(offline_mode):
+        ml_model.process_video(0)
+    else:
+        app.run(debug=True, threaded=True)
