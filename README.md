@@ -14,3 +14,5 @@ La carpeta principal de este repositorio contiene los siguientes archivos y carp
    - [Avances Semanales](./Avances%20Semanales): Carpeta que contendrá los avances que hagamos cada semana desde el inicio del proyecto hasta su cierre.
    - [Planeación](./Planeación): En esta carpeta se podrá encontrar mayor información sobre cómo se planificó el reto.
    - [Anexos](./Anexos): Aquí se encuentran todos los códigos y algoritmos analizados y utilizados en el transcurso del reto. Dentro de esta carpeta se encuentra el [Backend](./Anexos/backend/) bajo la carpeta del mismo nombre y la carpeta [create-react-app](./Anexos/create-react-app/) que es el frontend, ambas son las versiones finales usadas en este reto.
+- Reporte Final
+   - Carpeta donde se encuentra todos los entregables del reto desde el inicio del mismo a la vez que se encuentra la documentacion final del proyecto, dentro de esta carpeta esta un readme que describe la composicion de la entrega final, la cantidad total de archivos y cambios implementados acorde a los momentos de retroalimentacion.
