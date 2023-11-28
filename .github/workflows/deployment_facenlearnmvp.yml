@@ -52,7 +52,9 @@ jobs:
           name: node-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: |
+          unzip release.zip -d build
+          npm install --global serve
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -61,4 +63,4 @@ jobs:
           app-name: 'FaceNLearnMVP'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A15E15D7A4674EAD94A9E917B35127BB }}
-          package: .
+          package: build
